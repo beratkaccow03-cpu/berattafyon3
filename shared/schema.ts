@@ -95,49 +95,26 @@ export const flashcards = pgTable("flashcards", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertTaskSchema = createInsertSchema(tasks).omit({
-  id: true,
-  createdAt: true,
-  completedAt: true,
-});
+export const insertTaskSchema = createInsertSchema(tasks).omit({ id: true, createdAt: true, completedAt: true });
 
-export const insertMoodSchema = createInsertSchema(moods).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertMoodSchema = createInsertSchema(moods).omit({ id: true, createdAt: true });
 
-export const insertGoalSchema = createInsertSchema(goals).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertGoalSchema = createInsertSchema(goals).omit({ id: true, createdAt: true });
 
-export const insertQuestionLogSchema = createInsertSchema(questionLogs).omit({
-  id: true,
-  createdAt: true,
-}).extend({
+export const insertQuestionLogSchema = createInsertSchema(questionLogs).omit({ id: true, createdAt: true }).extend({
   // Hem eski wrong_topics dizisini hem de yeni yapılandırılmış biçimi izin ver
   wrong_topics: z.array(z.string()).optional(),
   wrong_topics_json: z.string().optional(),
 });
 
-export const insertExamResultSchema = createInsertSchema(examResults).omit({
-  id: true,
-  createdAt: true,
-}).extend({
+export const insertExamResultSchema = createInsertSchema(examResults).omit({ id: true, createdAt: true }).extend({
   // Geriye dönük uyumluluk için exam_type seçeneğini isteğe bağlı hale getir
   exam_type: z.enum(["TYT", "AYT"]).optional(),
 });
 
-export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
-  id: true,
-  createdAt: true,
-  reviewCount: true,
-});
+export const insertFlashcardSchema = createInsertSchema(flashcards).omit({ id: true, createdAt: true, reviewCount: true });
 
-export const insertExamSubjectNetSchema = createInsertSchema(examSubjectNets).omit({
-  id: true,
-  createdAt: true,
-});
+export const insertExamSubjectNetSchema = createInsertSchema(examSubjectNets).omit({ id: true, createdAt: true });
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;

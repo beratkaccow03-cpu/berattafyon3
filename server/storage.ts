@@ -136,8 +136,8 @@ export class MemStorage implements IStorage {
   async createTask(insertTask: InsertTask): Promise<Task> {
     const id = randomUUID();
     const task: Task = {
-      ...insertTask,
       id,
+      title: insertTask.title,
       description: insertTask.description ?? null,
       priority: insertTask.priority ?? "medium",
       category: insertTask.category ?? "genel",
@@ -201,8 +201,8 @@ export class MemStorage implements IStorage {
   async createMood(insertMood: InsertMood): Promise<Mood> {
     const id = randomUUID();
     const mood: Mood = {
-      ...insertMood,
       id,
+      mood: insertMood.mood,
       moodBg: insertMood.moodBg ?? null,
       note: insertMood.note ?? null,
       createdAt: new Date(),
@@ -286,8 +286,8 @@ export class MemStorage implements IStorage {
   async createGoal(insertGoal: InsertGoal): Promise<Goal> {
     const id = randomUUID();
     const goal: Goal = {
-      ...insertGoal,
       id,
+      title: insertGoal.title,
       description: insertGoal.description ?? null,
       category: insertGoal.category ?? "genel",
       targetDate: insertGoal.targetDate ?? null,
@@ -335,13 +335,17 @@ export class MemStorage implements IStorage {
       insertLog.wrong_topics.map(topic => this.normalizeTopic(topic)) : [];
     
     const log: QuestionLog = {
-      ...insertLog,
       id,
+      exam_type: insertLog.exam_type,
+      subject: insertLog.subject,
       topic: insertLog.topic ?? null,
+      correct_count: insertLog.correct_count,
+      wrong_count: insertLog.wrong_count,
       blank_count: insertLog.blank_count ?? "0",
       wrong_topics: normalizedWrongTopics,
       wrong_topics_json: insertLog.wrong_topics_json ?? null,
       time_spent_minutes: insertLog.time_spent_minutes ?? null,
+      study_date: insertLog.study_date,
       createdAt: new Date(),
     };
     this.questionLogs.set(id, log);
@@ -375,8 +379,9 @@ export class MemStorage implements IStorage {
   async createExamResult(insertResult: InsertExamResult): Promise<ExamResult> {
     const id = randomUUID();
     const result: ExamResult = {
-      ...insertResult,
       id,
+      exam_name: insertResult.exam_name,
+      exam_date: insertResult.exam_date,
       exam_type: insertResult.exam_type ?? null,
       notes: insertResult.notes ?? null,
       ranking: insertResult.ranking ?? null,
@@ -554,8 +559,11 @@ export class MemStorage implements IStorage {
     
     const id = randomUUID();
     const examSubjectNet: ExamSubjectNet = {
-      ...insertNet,
       id,
+      exam_id: insertNet.exam_id,
+      exam_type: insertNet.exam_type,
+      subject: insertNet.subject,
+      net_score: insertNet.net_score,
       correct_count: insertNet.correct_count ?? "0",
       wrong_count: insertNet.wrong_count ?? "0",
       blank_count: insertNet.blank_count ?? "0",
