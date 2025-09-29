@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Her iki tarihi de karşılaştırmak için gece yarısına ayarlama
       today.setHours(0, 0, 0, 0);
       targetDate.setHours(0, 0, 0, 0);
-      
+
       const diffTime = targetDate.getTime() - today.getTime();
       const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
@@ -177,27 +177,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/calculate-ranking", async (req, res) => {
     try {
       const { nets, year } = req.body;
-      
+
       // nets objesi örneği:
       let tytNets = 0;
       let aytNets = 0;
-      
+
       // TYT neti hesaplama
       if (nets?.tyt) {
         const tyt = nets.tyt;
-        tytNets = (parseFloat(tyt.turkce) || 0) + 
-                  (parseFloat(tyt.sosyal) || 0) + 
-                  (parseFloat(tyt.matematik) || 0) + 
-                  (parseFloat(tyt.fen) || 0);
+        tytNets =
+          (parseFloat(tyt.turkce) || 0) +
+          (parseFloat(tyt.sosyal) || 0) +
+          (parseFloat(tyt.matematik) || 0) +
+          (parseFloat(tyt.fen) || 0);
       }
-      
+
       // AYT neti hesaplama
       if (nets?.ayt) {
         const ayt = nets.ayt;
-        aytNets = (parseFloat(ayt.matematik) || 0) + 
-                  (parseFloat(ayt.fizik) || 0) + 
-                  (parseFloat(ayt.kimya) || 0) + 
-                  (parseFloat(ayt.biyoloji) || 0);
+        aytNets =
+          (parseFloat(ayt.matematik) || 0) +
+          (parseFloat(ayt.fizik) || 0) +
+          (parseFloat(ayt.kimya) || 0) +
+          (parseFloat(ayt.biyoloji) || 0);
       }
 
       // 2023-2025 YKS sıralama verileri (yaklaşık değerler)
@@ -264,7 +266,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const aytScore = aytNets * 4; // Her doğru ~4 puan
 
       // Ağırlıklı toplam puan
-      const totalScore = tytScore * yearData.tytWeight + aytScore * yearData.aytWeight;
+      const totalScore =
+        tytScore * yearData.tytWeight + aytScore * yearData.aytWeight;
 
       // En yakın sıralamayı bul
       let estimatedRanking = 500000; // Varsayılan
@@ -1452,20 +1455,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const pageWidth = 595;
     const pageHeight = 842;
     const margin = 40;
-    const contentWidth = pageWidth - (margin * 2);
-    
+    const contentWidth = pageWidth - margin * 2;
+
     const colors = {
-      turkishRed: '#E30A17',
-      turkishFlag: '#C8102E',
-      primary: '#8B5CF6',
-      secondary: '#6366F1',
-      success: '#10B981',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      text: '#111827',
-      muted: '#6B7280',
-      gold: '#FFD700',
-      white: '#FFFFFF'
+      turkishRed: "#E30A17",
+      turkishFlag: "#C8102E",
+      primary: "#8B5CF6",
+      secondary: "#6366F1",
+      success: "#10B981",
+      warning: "#F59E0B",
+      error: "#EF4444",
+      text: "#111827",
+      muted: "#6B7280",
+      gold: "#FFD700",
+      white: "#FFFFFF",
     };
 
     // SAYFA 1: Kapak ve Atatürk Sözü
@@ -1473,76 +1476,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     doc.rect(margin, 15, 50, 30).fill(colors.turkishRed);
     doc.circle(margin + 16, 30, 6).fill(colors.white);
     // Hilal ve yıldız (basitleştirilmiş)
-    doc.moveTo(margin + 20, 25).lineTo(margin + 26, 30).lineTo(margin + 20, 35).fill(colors.white);
+    doc
+      .moveTo(margin + 20, 25)
+      .lineTo(margin + 26, 30)
+      .lineTo(margin + 20, 35)
+      .fill(colors.white);
 
-    // Türk Bayrağı (sağ üst) 
+    // Türk Bayrağı (sağ üst)
     doc.rect(pageWidth - margin - 50, 15, 50, 30).fill(colors.turkishRed);
     doc.circle(pageWidth - margin - 34, 30, 6).fill(colors.white);
-    doc.moveTo(pageWidth - margin - 30, 25).lineTo(pageWidth - margin - 24, 30).lineTo(pageWidth - margin - 30, 35).fill(colors.white);
+    doc
+      .moveTo(pageWidth - margin - 30, 25)
+      .lineTo(pageWidth - margin - 24, 30)
+      .lineTo(pageWidth - margin - 30, 35)
+      .fill(colors.white);
 
     let yPos = 80;
 
     // Atatürk Sözü - Büyük, Kalın, İtalik (İsteğiniz üzere)
-    doc.fontSize(16)
-       .fillColor(colors.text)
-       .font('Helvetica-BoldOblique')
-       .text('"Biz her şeyi gençliğe bırakacağız... Geleceğin ümidi,', margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc
+      .fontSize(16)
+      .fillColor(colors.text)
+      .font("Helvetica-BoldOblique")
+      .text(
+        '"Biz her şeyi gençliğe bırakacağız... Geleceğin ümidi,',
+        margin,
+        yPos,
+        { align: "center", width: contentWidth },
+      );
+
     yPos += 22;
-    doc.text('ışıklı çiçekleri onlardır. Bütün ümidim gençliktedir."', margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc.text(
+      'ışıklı çiçekleri onlardır. Bütün ümidim gençliktedir."',
+      margin,
+      yPos,
+      { align: "center", width: contentWidth },
+    );
+
     yPos += 30;
-    doc.fontSize(12)
-       .fillColor(colors.muted)
-       .font('Helvetica-Oblique')
-       .text('- Mustafa Kemal Atatürk -', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(12)
+      .fillColor(colors.muted)
+      .font("Helvetica-Oblique")
+      .text("- Mustafa Kemal Atatürk -", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 60;
 
     // Ana Başlık
-    doc.fontSize(24)
-       .fillColor(colors.primary)
-       .font('Helvetica-Bold')
-       .text('🎓 BERAT ÇAKIROĞLU', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(24)
+      .fillColor(colors.primary)
+      .font("Helvetica-Bold")
+      .text("🎓 BERAT ÇAKIROĞLU", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 30;
-    doc.fontSize(18)
-       .fillColor(colors.turkishRed)
-       .text('KİŞİSEL ÇALIŞMA ANALİZ RAPORU', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(18)
+      .fillColor(colors.turkishRed)
+      .text("KİŞİSEL ÇALIŞMA ANALİZ RAPORU", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 40;
     // Tarih bilgisi
     const currentDate = new Date();
-    doc.fontSize(12)
-       .fillColor(colors.muted)
-       .font('Helvetica')
-       .text(`📅 Rapor Tarihi: ${currentDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}`, margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc
+      .fontSize(12)
+      .fillColor(colors.muted)
+      .font("Helvetica")
+      .text(
+        `📅 Rapor Tarihi: ${currentDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}`,
+        margin,
+        yPos,
+        { align: "center", width: contentWidth },
+      );
+
     yPos += 18;
-    doc.text(`📊 Analiz Dönemi: ${reportData.month || 'Bu Ay'} | 🎯 Toplam ${reportData.totalActivities || 0} Aktivite`, margin, yPos, { align: 'center', width: contentWidth });
+    doc.text(
+      `📊 Analiz Dönemi: ${reportData.month || "Bu Ay"} | 🎯 Toplam ${reportData.totalActivities || 0} Aktivite`,
+      margin,
+      yPos,
+      { align: "center", width: contentWidth },
+    );
 
     yPos += 50;
 
     // Motivasyonel Başarı Bölümü
-    doc.fontSize(14)
-       .fillColor(colors.success)
-       .font('Helvetica-Bold')
-       .text('🌟 BAŞARILARINIZ', margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc
+      .fontSize(14)
+      .fillColor(colors.success)
+      .font("Helvetica-Bold")
+      .text("🌟 BAŞARILARINIZ", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
+
     yPos += 25;
     const achievements = [];
-    if (reportData.totalQuestions > 50) achievements.push(`${reportData.totalQuestions} soru ile mükemmel çalışma temposu`);
-    if (reportData.correctAnswers > reportData.wrongAnswers) achievements.push(`Doğru cevaplarınız yanlışlarınızdan fazla!`);
-    if (reportData.totalTasks > 10) achievements.push(`${reportData.totalTasks} görevi başarıyla tamamladınız`);
-    if (reportData.totalExams > 3) achievements.push(`${reportData.totalExams} deneme ile kendinizi test ettiniz`);
-    
-    if (achievements.length === 0) achievements.push('Her çalışma sizi hedefinize yaklaştırıyor!');
-    
-    achievements.slice(0, 4).forEach(achievement => {
-      doc.fontSize(10)
-         .fillColor(colors.text)
-         .font('Helvetica')
-         .text(`✓ ${achievement}`, margin + 15, yPos);
+    if (reportData.totalQuestions > 50)
+      achievements.push(
+        `${reportData.totalQuestions} soru ile mükemmel çalışma temposu`,
+      );
+    if (reportData.correctAnswers > reportData.wrongAnswers)
+      achievements.push(`Doğru cevaplarınız yanlışlarınızdan fazla!`);
+    if (reportData.totalTasks > 10)
+      achievements.push(
+        `${reportData.totalTasks} görevi başarıyla tamamladınız`,
+      );
+    if (reportData.totalExams > 3)
+      achievements.push(
+        `${reportData.totalExams} deneme ile kendinizi test ettiniz`,
+      );
+
+    if (achievements.length === 0)
+      achievements.push("Her çalışma sizi hedefinize yaklaştırıyor!");
+
+    achievements.slice(0, 4).forEach((achievement) => {
+      doc
+        .fontSize(10)
+        .fillColor(colors.text)
+        .font("Helvetica")
+        .text(`✓ ${achievement}`, margin + 15, yPos);
       yPos += 20;
     });
 
@@ -1550,26 +1611,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     doc.addPage();
     yPos = margin;
 
-    doc.fontSize(20)
-       .fillColor(colors.primary)
-       .font('Helvetica-Bold')
-       .text('📊 DETAYLI İSTATİSTİKLER', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(20)
+      .fillColor(colors.primary)
+      .font("Helvetica-Bold")
+      .text("📊 DETAYLI İSTATİSTİKLER", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 50;
 
     const statsData = [
-      { label: 'Toplam Soru', value: reportData.totalQuestions || 0, color: colors.primary, icon: '📚' },
-      { label: 'Doğru Cevap', value: reportData.correctAnswers || 0, color: colors.success, icon: '✅' },
-      { label: 'Yanlış Cevap', value: reportData.wrongAnswers || 0, color: colors.error, icon: '❌' },
-      { label: 'Deneme Sınavı', value: reportData.totalExams || 0, color: colors.secondary, icon: '📝' },
-      { label: 'Tamamlanan Görev', value: reportData.totalTasks || 0, color: colors.warning, icon: '✓' },
-      { label: 'Toplam Aktivite', value: reportData.totalActivities || 0, color: colors.gold, icon: '⭐' }
+      {
+        label: "Toplam Soru",
+        value: reportData.totalQuestions || 0,
+        color: colors.primary,
+        icon: "📚",
+      },
+      {
+        label: "Doğru Cevap",
+        value: reportData.correctAnswers || 0,
+        color: colors.success,
+        icon: "✅",
+      },
+      {
+        label: "Yanlış Cevap",
+        value: reportData.wrongAnswers || 0,
+        color: colors.error,
+        icon: "❌",
+      },
+      {
+        label: "Deneme Sınavı",
+        value: reportData.totalExams || 0,
+        color: colors.secondary,
+        icon: "📝",
+      },
+      {
+        label: "Tamamlanan Görev",
+        value: reportData.totalTasks || 0,
+        color: colors.warning,
+        icon: "✓",
+      },
+      {
+        label: "Toplam Aktivite",
+        value: reportData.totalActivities || 0,
+        color: colors.gold,
+        icon: "⭐",
+      },
     ];
 
     // 2x3 düzeninde kartlar
     const cardWidth = (contentWidth - 20) / 2;
     const cardHeight = 70;
-    let cardX = margin, cardY = yPos;
+    let cardX = margin,
+      cardY = yPos;
 
     statsData.forEach((stat, index) => {
       if (index % 2 === 0 && index > 0) {
@@ -1578,12 +1674,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Geliştirilmiş kart tasarımı
-      doc.rect(cardX, cardY, cardWidth, cardHeight).fillAndStroke('#F8F9FA', colors.muted + '40');
-      
+      doc
+        .rect(cardX, cardY, cardWidth, cardHeight)
+        .fillAndStroke("#F8F9FA", colors.muted + "40");
+
       // İkon ve değer
-      doc.fontSize(12).fillColor(stat.color).text(stat.icon, cardX + 12, cardY + 12);
-      doc.fontSize(24).fillColor(stat.color).font('Helvetica-Bold').text(stat.value.toString(), cardX + 35, cardY + 8);
-      doc.fontSize(10).fillColor(colors.text).font('Helvetica').text(stat.label, cardX + 12, cardY + 45);
+      doc
+        .fontSize(12)
+        .fillColor(stat.color)
+        .text(stat.icon, cardX + 12, cardY + 12);
+      doc
+        .fontSize(24)
+        .fillColor(stat.color)
+        .font("Helvetica-Bold")
+        .text(stat.value.toString(), cardX + 35, cardY + 8);
+      doc
+        .fontSize(10)
+        .fillColor(colors.text)
+        .font("Helvetica")
+        .text(stat.label, cardX + 12, cardY + 45);
 
       cardX += cardWidth + 20;
     });
@@ -1592,59 +1701,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Performans Analizi
     if (reportData.totalQuestions > 0) {
-      const successRate = Math.round((reportData.correctAnswers / reportData.totalQuestions) * 100);
-      const netScore = reportData.correctAnswers - (reportData.wrongAnswers * 0.25);
-      
-      doc.fontSize(16)
-         .fillColor(colors.success)
-         .font('Helvetica-Bold')
-         .text('🎯 PERFORMANS ANALİZİ', margin, yPos);
-      
+      const successRate = Math.round(
+        (reportData.correctAnswers / reportData.totalQuestions) * 100,
+      );
+      const netScore =
+        reportData.correctAnswers - reportData.wrongAnswers * 0.25;
+
+      doc
+        .fontSize(16)
+        .fillColor(colors.success)
+        .font("Helvetica-Bold")
+        .text("🎯 PERFORMANS ANALİZİ", margin, yPos);
+
       yPos += 30;
-      doc.fontSize(12)
-         .fillColor(colors.text)
-         .font('Helvetica')
-         .text(`📈 Başarı Oranınız: %${successRate}`, margin + 15, yPos);
-      
+      doc
+        .fontSize(12)
+        .fillColor(colors.text)
+        .font("Helvetica")
+        .text(`📈 Başarı Oranınız: %${successRate}`, margin + 15, yPos);
+
       yPos += 20;
       doc.text(`🎯 Net Puanınız: ${netScore.toFixed(2)}`, margin + 15, yPos);
-      
+
       yPos += 25;
-      let performanceMsg = '';
-      if (successRate >= 80) performanceMsg = 'Mükemmel! Hedeflerinize çok yakınsınız! 🌟';
-      else if (successRate >= 60) performanceMsg = 'Harika! Biraz daha çalışmayla hedefe ulaşacaksınız! 💪';
-      else if (successRate >= 40) performanceMsg = 'İyi başlangıç! Daha fazla çalışmayla başarıya ulaşabilirsiniz! 📚';
-      else performanceMsg = 'Her başarı hikayesi bir yerden başlar! Devam edin! 🚀';
-      
-      doc.fontSize(11).fillColor(colors.primary).text(performanceMsg, margin + 15, yPos);
+      let performanceMsg = "";
+      if (successRate >= 80)
+        performanceMsg = "Mükemmel! Hedeflerinize çok yakınsınız! 🌟";
+      else if (successRate >= 60)
+        performanceMsg =
+          "Harika! Biraz daha çalışmayla hedefe ulaşacaksınız! 💪";
+      else if (successRate >= 40)
+        performanceMsg =
+          "İyi başlangıç! Daha fazla çalışmayla başarıya ulaşabilirsiniz! 📚";
+      else
+        performanceMsg =
+          "Her başarı hikayesi bir yerden başlar! Devam edin! 🚀";
+
+      doc
+        .fontSize(11)
+        .fillColor(colors.primary)
+        .text(performanceMsg, margin + 15, yPos);
     }
 
     // SAYFA 3: Detaylı Aktiviteler
-    if (reportData.tasks?.length > 0 || reportData.questionLogs?.length > 0 || reportData.examResults?.length > 0) {
+    if (
+      reportData.tasks?.length > 0 ||
+      reportData.questionLogs?.length > 0 ||
+      reportData.examResults?.length > 0
+    ) {
       doc.addPage();
       yPos = margin;
 
-      doc.fontSize(18)
-         .fillColor(colors.primary)
-         .font('Helvetica-Bold')
-         .text('📋 DETAYLI AKTİVİTE RAPORU', margin, yPos);
+      doc
+        .fontSize(18)
+        .fillColor(colors.primary)
+        .font("Helvetica-Bold")
+        .text("📋 DETAYLI AKTİVİTE RAPORU", margin, yPos);
 
       yPos += 35;
 
       // Tamamlanan Görevler
       if (reportData.tasks?.length > 0) {
-        doc.fontSize(14)
-           .fillColor(colors.warning)
-           .font('Helvetica-Bold')
-           .text('✅ Tamamlanan Görevler:', margin, yPos);
-        
+        doc
+          .fontSize(14)
+          .fillColor(colors.warning)
+          .font("Helvetica-Bold")
+          .text("✅ Tamamlanan Görevler:", margin, yPos);
+
         yPos += 22;
         reportData.tasks.slice(0, 8).forEach((task: any, index: number) => {
-          const categoryText = getCategoryText(task.category || 'genel');
-          doc.fontSize(10)
-             .fillColor(colors.text)
-             .font('Helvetica')
-             .text(`${index + 1}. ${task.title || 'Görev'} - ${categoryText}`, margin + 15, yPos);
+          const categoryText = getCategoryText(task.category || "genel");
+          doc
+            .fontSize(10)
+            .fillColor(colors.text)
+            .font("Helvetica")
+            .text(
+              `${index + 1}. ${task.title || "Görev"} - ${categoryText}`,
+              margin + 15,
+              yPos,
+            );
           yPos += 16;
         });
         yPos += 15;
@@ -1652,37 +1787,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Soru Çözüm Detayları
       if (reportData.questionLogs?.length > 0) {
-        doc.fontSize(14)
-           .fillColor(colors.secondary)
-           .font('Helvetica-Bold')
-           .text('📚 Soru Çözüm Detayları:', margin, yPos);
-        
+        doc
+          .fontSize(14)
+          .fillColor(colors.secondary)
+          .font("Helvetica-Bold")
+          .text("📚 Soru Çözüm Detayları:", margin, yPos);
+
         yPos += 22;
-        reportData.questionLogs.slice(0, 6).forEach((log: any, index: number) => {
-          doc.fontSize(10)
-             .fillColor(colors.text)
-             .font('Helvetica')
-             .text(`${index + 1}. ${log.exam_type} ${log.subject}: ${log.correct_count}D/${log.wrong_count}Y/${log.blank_count}B - ${log.study_date}`, margin + 15, yPos);
-          yPos += 16;
-        });
+        reportData.questionLogs
+          .slice(0, 6)
+          .forEach((log: any, index: number) => {
+            doc
+              .fontSize(10)
+              .fillColor(colors.text)
+              .font("Helvetica")
+              .text(
+                `${index + 1}. ${log.exam_type} ${log.subject}: ${log.correct_count}D/${log.wrong_count}Y/${log.blank_count}B - ${log.study_date}`,
+                margin + 15,
+                yPos,
+              );
+            yPos += 16;
+          });
         yPos += 15;
       }
 
       // Deneme Sonuçları
       if (reportData.examResults?.length > 0) {
-        doc.fontSize(14)
-           .fillColor(colors.error)
-           .font('Helvetica-Bold')
-           .text('🎯 Deneme Sınavı Sonuçları:', margin, yPos);
-        
+        doc
+          .fontSize(14)
+          .fillColor(colors.error)
+          .font("Helvetica-Bold")
+          .text("🎯 Deneme Sınavı Sonuçları:", margin, yPos);
+
         yPos += 22;
-        reportData.examResults.slice(0, 4).forEach((exam: any, index: number) => {
-          doc.fontSize(10)
-             .fillColor(colors.text)
-             .font('Helvetica')
-             .text(`${index + 1}. ${exam.exam_name}: TYT ${exam.tyt_net}net, AYT ${exam.ayt_net}net - ${exam.exam_date}`, margin + 15, yPos);
-          yPos += 16;
-        });
+        reportData.examResults
+          .slice(0, 4)
+          .forEach((exam: any, index: number) => {
+            doc
+              .fontSize(10)
+              .fillColor(colors.text)
+              .font("Helvetica")
+              .text(
+                `${index + 1}. ${exam.exam_name}: TYT ${exam.tyt_net}net, AYT ${exam.ayt_net}net - ${exam.exam_date}`,
+                margin + 15,
+                yPos,
+              );
+            yPos += 16;
+          });
       }
     }
 
@@ -1690,67 +1841,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     doc.addPage();
     yPos = margin + 80;
 
-    doc.fontSize(18)
-       .fillColor(colors.success)
-       .font('Helvetica-Bold')
-       .text('🌟 BU AY HARİKA BİR ÇALIŞMA SERGİLEDİNİZ!', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(18)
+      .fillColor(colors.success)
+      .font("Helvetica-Bold")
+      .text("🌟 BU AY HARİKA BİR ÇALIŞMA SERGİLEDİNİZ!", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 50;
-    doc.fontSize(12)
-       .fillColor(colors.text)
-       .font('Helvetica')
-       .text('Hedefinize doğru ilerliyor, her gün kendinizi geliştiriyorsunuz.', margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc
+      .fontSize(12)
+      .fillColor(colors.text)
+      .font("Helvetica")
+      .text(
+        "Hedefinize doğru ilerliyor, her gün kendinizi geliştiriyorsunuz.",
+        margin,
+        yPos,
+        { align: "center", width: contentWidth },
+      );
+
     yPos += 20;
-    doc.text('Bu rapor sadece bir özet, asıl başarı sizin azminizde gizli.', margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc.text(
+      "Bu rapor sadece bir özet, asıl başarı sizin azminizde gizli.",
+      margin,
+      yPos,
+      { align: "center", width: contentWidth },
+    );
+
     yPos += 20;
-    doc.text('Her soru, her görev sizi hayalinizdeki üniversiteye yaklaştırıyor!', margin, yPos, { align: 'center', width: contentWidth });
+    doc.text(
+      "Her soru, her görev sizi hayalinizdeki üniversiteye yaklaştırıyor!",
+      margin,
+      yPos,
+      { align: "center", width: contentWidth },
+    );
 
     yPos += 60;
-    doc.fontSize(14)
-       .fillColor(colors.primary)
-       .font('Helvetica-Bold')
-       .text('📧 İLETİŞİM BİLGİLERİ', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(14)
+      .fillColor(colors.primary)
+      .font("Helvetica-Bold")
+      .text("📧 İLETİŞİM BİLGİLERİ", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 30;
-    doc.fontSize(11)
-       .fillColor(colors.muted)
-       .font('Helvetica')
-       .text('E-posta: beratkaccow03@gmail.com', margin, yPos, { align: 'center', width: contentWidth });
+    doc
+      .fontSize(11)
+      .fillColor(colors.muted)
+      .font("Helvetica")
+      .text("E-posta: beratkaccow03@gmail.com", margin, yPos, {
+        align: "center",
+        width: contentWidth,
+      });
 
     yPos += 18;
-    doc.text('Telefon: +90 555 123 45 67', margin, yPos, { align: 'center', width: contentWidth });
-
-    yPos += 18;
-    doc.text('Konum: Sakarya, Serdivan', margin, yPos, { align: 'center', width: contentWidth });
+    doc.text("Konum: Sakarya, Serdivan", margin, yPos, {
+      align: "center",
+      width: contentWidth,
+    });
 
     // Alt bilgi
     yPos = pageHeight - 60;
-    doc.fontSize(9)
-       .fillColor(colors.muted)
-       .text(`Bu rapor ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik oluşturulmuştur.`, margin, yPos, { align: 'center', width: contentWidth });
-    
+    doc
+      .fontSize(9)
+      .fillColor(colors.muted)
+      .text(
+        `Bu rapor ${new Date().toLocaleDateString("tr-TR")} tarihinde otomatik oluşturulmuştur.`,
+        margin,
+        yPos,
+        { align: "center", width: contentWidth },
+      );
+
     yPos += 15;
-    doc.text('🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi - Geleceğe Yatırım 🇹🇷', margin, yPos, { align: 'center', width: contentWidth });
+    doc.text(
+      "🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi - Geleceğe Yatırım 🇹🇷",
+      margin,
+      yPos,
+      { align: "center", width: contentWidth },
+    );
   };
 
   // Kategori metinlerini düzgün göstermek için yardımcı fonksiyon
   const getCategoryText = (category: string) => {
     const categoryMap: { [key: string]: string } = {
-      "genel": "Genel",
-      "turkce": "Türkçe",
-      "sosyal": "Sosyal Bilimler",
-      "matematik": "Matematik",
-      "fizik": "Fizik",
-      "kimya": "Kimya",
-      "biyoloji": "Biyoloji",
+      genel: "Genel",
+      turkce: "Türkçe",
+      sosyal: "Sosyal Bilimler",
+      matematik: "Matematik",
+      fizik: "Fizik",
+      kimya: "Kimya",
+      biyoloji: "Biyoloji",
       "tyt-geometri": "TYT Geometri",
       "ayt-geometri": "AYT Geometri",
       "ayt-matematik": "AYT Matematik",
       "ayt-fizik": "AYT Fizik",
       "ayt-kimya": "AYT Kimya",
-      "ayt-biyoloji": "AYT Biyoloji"
+      "ayt-biyoloji": "AYT Biyoloji",
     };
     return categoryMap[category] || category;
   };
@@ -1764,25 +1954,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wrongAnswers: 9,
         totalExams: 2,
         totalTasks: 1,
-        totalActivities: 4
+        totalActivities: 4,
       };
 
       const PDFDocument = PDFKit;
-      const doc = new PDFDocument({ size: 'A4', margin: 50 });
-      
+      const doc = new PDFDocument({ size: "A4", margin: 50 });
+
       // PDF içeriği oluştur
       generatePDFContent(doc, reportData);
-      
+
       // Response headers
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'attachment; filename="Berat_Cakiroglu_Rapor.pdf"');
-      
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="Berat_Cakiroglu_Rapor.pdf"',
+      );
+
       // PDF stream'ini response'a pipe et
       doc.pipe(res);
       doc.end();
-      
     } catch (error) {
-      console.error('PDF download error:', error);
+      console.error("PDF download error:", error);
       res.status(500).json({ message: "PDF oluşturulurken hata oluştu" });
     }
   });
@@ -1791,51 +1983,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/send-report", async (req, res) => {
     try {
       const { email, phone, reportData } = req.body;
-      
+
       if (!email || !reportData) {
-        return res.status(400).json({ message: "Email ve rapor verisi gerekli" });
+        return res
+          .status(400)
+          .json({ message: "Email ve rapor verisi gerekli" });
       }
 
       // Email format validation
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Geçerli bir email adresi giriniz" });
+        return res
+          .status(400)
+          .json({ message: "Geçerli bir email adresi giriniz" });
       }
 
       // Test email addresses'i engelle
-      const testDomains = ['example.com', 'test.com', 'fake.com', 'dummy.com'];
-      const emailDomain = email.split('@')[1].toLowerCase();
+      const testDomains = ["example.com", "test.com", "fake.com", "dummy.com"];
+      const emailDomain = email.split("@")[1].toLowerCase();
       if (testDomains.includes(emailDomain)) {
-        return res.status(400).json({ message: "Lütfen gerçek bir email adresi kullanın" });
+        return res
+          .status(400)
+          .json({ message: "Lütfen gerçek bir email adresi kullanın" });
       }
 
       // PDF oluştur - PDFKit kullanarak
       const doc = new PDFKit({
-        size: 'A4',
+        size: "A4",
         margins: { top: 50, bottom: 50, left: 50, right: 50 },
         info: {
-          Title: 'Aylık Aktivite Raporu',
-          Author: 'Berat Çakıroğlu Ders Analiz Sistemi',
-          Subject: 'Aylık Çalışma Performans Raporu'
-        }
+          Title: "Aylık Aktivite Raporu",
+          Author: "Berat Çakıroğlu Ders Analiz Sistemi",
+          Subject: "Aylık Çalışma Performans Raporu",
+        },
       });
 
       // Türkçe karakter desteği için font yükle
       try {
         // PDFKit ile gömülü font kullanarak Türkçe karakter desteği
         // Eğer özel font yoksa, built-in Helvetica kullanacak
-        doc.registerFont('DefaultFont', 'Helvetica');
+        doc.registerFont("DefaultFont", "Helvetica");
       } catch (error) {
-        console.warn('Font loading warning:', error.message);
+        console.warn("Font loading warning:", error.message);
       }
 
       // PDF buffer'ını oluştur
       const buffers: Buffer[] = [];
-      doc.on('data', buffers.push.bind(buffers));
-      
+      doc.on("data", buffers.push.bind(buffers));
+
       await new Promise<void>((resolve) => {
-        doc.on('end', resolve);
-        
+        doc.on("end", resolve);
+
         // PDF içeriği oluştur
         generatePDFContent(doc, reportData);
         doc.end();
@@ -1844,27 +2042,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const pdfBuffer = Buffer.concat(buffers);
 
       // E-posta gönderimi
-      
+
       // Gmail SMTP konfigürasyonu - İyileştirilmiş
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
+        service: "gmail",
+        host: "smtp.gmail.com",
         port: 587,
         secure: false,
         auth: {
           user: process.env.EMAIL_USER || process.env.GMAIL_USER,
-          pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS
+          pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS,
         },
         tls: {
-          rejectUnauthorized: false
-        }
+          rejectUnauthorized: false,
+        },
       });
 
       // E-posta ayarları
       const mailOptions = {
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
         to: email,
-        subject: `📊 Aylık Aktivite Raporu - ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`,
+        subject: `📊 Aylık Aktivite Raporu - ${new Date().toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}`,
         html: `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: linear-gradient(135deg, #E30A17 0%, #8B5CF6 50%, #E30A17 100%); padding: 25px; border-radius: 16px;">
             
@@ -1899,7 +2097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               <div style="text-align: center; margin-bottom: 30px;">
                 <h1 style="color: #8B5CF6; margin: 0 0 10px 0; font-size: 28px; font-weight: bold;">🎓 BERAT ÇAKIROĞLU</h1>
                 <h2 style="color: #E30A17; margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">KİŞİSEL ÇALIŞMA ANALİZ RAPORU</h2>
-                <p style="color: #6B7280; margin: 0; font-size: 14px;">📅 ${new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} | 🏆 Mükemmellik Yolunda</p>
+                <p style="color: #6B7280; margin: 0; font-size: 14px;">📅 ${new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} | 🏆 Mükemmellik Yolunda</p>
               </div>
 
               <!-- Başarı Mesajı -->
@@ -1925,7 +2123,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               </div>
 
               <!-- Performans Analizi -->
-              ${reportData.totalQuestions > 0 ? `
+              ${
+                reportData.totalQuestions > 0
+                  ? `
               <div style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
                 <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; display: flex; align-items: center;">
                   🎯 PERFORMANS ANALİZİ
@@ -1936,21 +2136,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     <div style="font-size: 12px; opacity: 0.9;">Başarı Oranı</div>
                   </div>
                   <div>
-                    <div style="font-size: 24px; font-weight: bold;">${(reportData.correctAnswers - (reportData.wrongAnswers * 0.25)).toFixed(1)}</div>
+                    <div style="font-size: 24px; font-weight: bold;">${(reportData.correctAnswers - reportData.wrongAnswers * 0.25).toFixed(1)}</div>
                     <div style="font-size: 12px; opacity: 0.9;">Net Puan</div>
                   </div>
                 </div>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
 
               <!-- Motivasyonel İçerik -->
               <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #8B5CF6;">
                 <h3 style="color: #1E293B; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">💫 BU AYIN ÖNE ÇIKAN BAŞARILARI</h3>
                 <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
-                  ${reportData.totalQuestions > 50 ? `<li>${reportData.totalQuestions} soru ile mükemmel bir çalışma temposu sergiledינiz</li>` : ''}
-                  ${reportData.correctAnswers > reportData.wrongAnswers ? `<li>Doğru cevaplarınız yanlışlarınızdan fazla - harika bir performans!</li>` : ''}
-                  ${reportData.totalTasks > 10 ? `<li>${reportData.totalTasks} görevi başarıyla tamamladınız</li>` : ''}
-                  ${reportData.totalExams > 3 ? `<li>${reportData.totalExams} deneme sınavı ile kendinizi test ettiniz</li>` : ''}
+                  ${reportData.totalQuestions > 50 ? `<li>${reportData.totalQuestions} soru ile mükemmel bir çalışma temposu sergiledינiz</li>` : ""}
+                  ${reportData.correctAnswers > reportData.wrongAnswers ? `<li>Doğru cevaplarınız yanlışlarınızdan fazla - harika bir performans!</li>` : ""}
+                  ${reportData.totalTasks > 10 ? `<li>${reportData.totalTasks} görevi başarıyla tamamladınız</li>` : ""}
+                  ${reportData.totalExams > 3 ? `<li>${reportData.totalExams} deneme sınavı ile kendinizi test ettiniz</li>` : ""}
                   <li>Disiplinli çalışma alışkanlığınızı sürdürüyorsunuz</li>
                   <li>Her gün hedefinize bir adım daha yaklaşıyorsunuz</li>
                 </ul>
@@ -1975,19 +2177,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 </p>
               </div>
 
-              <!-- İletişim ve İmza -->
-              <div style="text-align: center; margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%); border-radius: 12px; border-top: 3px solid #E30A17;">
-                <h3 style="color: #E30A17; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📧 İLETİŞİM BİLGİLERİ</h3>
-                <p style="color: #6B7280; margin: 5px 0; font-size: 12px;">E-posta: beratkaccow03@gmail.com</p>
-                <p style="color: #6B7280; margin: 5px 0; font-size: 12px;">Telefon: +90 555 123 45 67</p>
-                <p style="color: #6B7280; margin: 5px 0; font-size: 12px;">Konum: Sakarya, Serdivan</p>
-              </div>
+            
 
               <!-- Kapanış -->
               <div style="text-align: center; margin-top: 25px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 12px;">
-                <p style="color: #8B5CF6; margin: 0; font-size: 14px; font-weight: bold;">🚀 Hedefinize Doğru Emin Adımlarla İlerliyorsunuz!</p>
+                <p style="color: #8B5CF6; margin: 0; font-size: 14px; font-weight: bold;">🚀 Bu E-Posta Berat Çakıroğlu Analiz/Takip Sistemi Tarafından Otomatik Olarak Oluşturulmuştur.</p>
                 <p style="color: #6B7280; margin: 8px 0 0 0; font-size: 12px;">
-                  Bu rapor ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik olarak oluşturulmuştur.
+                  Bu rapor ${new Date().toLocaleDateString("tr-TR")} tarihinde otomatik olarak oluşturulmuştur.
                 </p>
                 <p style="color: #E30A17; margin: 8px 0 0 0; font-size: 11px; font-weight: bold;">
                   🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi - Geleceğe Yatırım 🇹🇷
@@ -1998,41 +2194,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `,
         attachments: [
           {
-            filename: `aktivite-raporu-${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`,
+            filename: `aktivite-raporu-${new Date().toLocaleDateString("tr-TR").replace(/\./g, "-")}.pdf`,
             content: pdfBuffer,
-            contentType: 'application/pdf'
-          }
-        ]
+            contentType: "application/pdf",
+          },
+        ],
       };
 
       // E-postayı gönder
       if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         try {
           const info = await transporter.sendMail(mailOptions);
-          console.log('Email sent successfully:', info.messageId);
-          res.json({ message: "Rapor başarıyla e-posta adresinize gönderildi!" });
+          console.log("Email sent successfully:", info.messageId);
+          res.json({
+            message: "Rapor başarıyla e-posta adresinize gönderildi!",
+          });
         } catch (emailError) {
-          console.error('Email sending failed:', emailError);
-          
+          console.error("Email sending failed:", emailError);
+
           // Email hatasının türüne göre farklı mesajlar
-          if (emailError.code === 'ENOTFOUND' || emailError.code === 'ECONNECTION') {
-            res.status(500).json({ message: "Email servisi ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin." });
+          if (
+            emailError.code === "ENOTFOUND" ||
+            emailError.code === "ECONNECTION"
+          ) {
+            res.status(500).json({
+              message:
+                "Email servisi ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin.",
+            });
           } else if (emailError.responseCode === 550) {
-            res.status(400).json({ message: "Email adresi bulunamadı veya geçersiz. Lütfen doğru email adresini kontrol edin." });
+            res.status(400).json({
+              message:
+                "Email adresi bulunamadı veya geçersiz. Lütfen doğru email adresini kontrol edin.",
+            });
           } else if (emailError.responseCode === 535) {
-            res.status(500).json({ message: "Email kimlik doğrulama hatası. Sistem yöneticisine başvurun." });
+            res.status(500).json({
+              message:
+                "Email kimlik doğrulama hatası. Sistem yöneticisine başvurun.",
+            });
           } else {
-            res.status(500).json({ message: `Email gönderiminde hata: ${emailError.message}` });
+            res.status(500).json({
+              message: `Email gönderiminde hata: ${emailError.message}`,
+            });
           }
         }
       } else {
         // E-posta kimlik bilgileri yoksa sadece PDF oluştur ve başarı mesajı döndür
-        res.json({ message: "PDF raporu oluşturuldu! (E-posta ayarları yapılandırılmamış)" });
+        res.json({
+          message:
+            "PDF raporu oluşturuldu! (E-posta ayarları yapılandırılmamış)",
+        });
       }
-
     } catch (error) {
-      console.error('PDF/Email error:', error);
-      res.status(500).json({ message: "Rapor gönderilirken hata oluştu: " + error.message });
+      console.error("PDF/Email error:", error);
+      res
+        .status(500)
+        .json({ message: "Rapor gönderilirken hata oluştu: " + error.message });
     }
   });
 
@@ -2048,7 +2264,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Email format validation
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(email)) {
-        return res.status(400).json({ message: "Geçerli bir email adresi giriniz" });
+        return res
+          .status(400)
+          .json({ message: "Geçerli bir email adresi giriniz" });
       }
 
       // Test senaryoları için farklı veri setleri
@@ -2061,8 +2279,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wrongAnswers: 5,
             totalExams: 1,
             totalTasks: 3,
-            totalActivities: 7
-          }
+            totalActivities: 7,
+          },
         },
         deneme_tamamlandi: {
           subject: "📝 Deneme Sınavı Tamamlandı - Test",
@@ -2072,8 +2290,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wrongAnswers: 35,
             totalExams: 5,
             totalTasks: 8,
-            totalActivities: 15
-          }
+            totalActivities: 15,
+          },
         },
         hatali_konular: {
           subject: "⚠️ Hatalı Konular Analizi - Test",
@@ -2083,8 +2301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wrongAnswers: 20,
             totalExams: 2,
             totalTasks: 5,
-            totalActivities: 9
-          }
+            totalActivities: 9,
+          },
         },
         gorev_eklendi: {
           subject: "✅ Yeni Görevler Eklendi - Test",
@@ -2094,8 +2312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wrongAnswers: 3,
             totalExams: 1,
             totalTasks: 12,
-            totalActivities: 20
-          }
+            totalActivities: 20,
+          },
         },
         gorev_tamamlandi: {
           subject: "🎉 Görevler Tamamlandı - Test",
@@ -2105,8 +2323,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wrongAnswers: 5,
             totalExams: 3,
             totalTasks: 15,
-            totalActivities: 25
-          }
+            totalActivities: 25,
+          },
         },
         aylik_ozet: {
           subject: "📊 Aylık Özet Raporu - Test",
@@ -2116,38 +2334,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             wrongAnswers: 40,
             totalExams: 8,
             totalTasks: 25,
-            totalActivities: 50
-          }
-        }
+            totalActivities: 50,
+          },
+        },
       };
 
       const scenario = testScenarios[testType] || testScenarios.aylik_ozet;
-      
+
       // PDF oluştur
       const doc = new PDFKit({
-        size: 'A4',
+        size: "A4",
         margin: 40,
-        bufferPages: true
+        bufferPages: true,
       });
 
       const buffers = [];
-      doc.on('data', buffers.push.bind(buffers));
-      doc.on('end', () => {
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", () => {
         const pdfBuffer = Buffer.concat(buffers);
-        
+
         // Gmail SMTP konfigürasyonu
         const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          host: 'smtp.gmail.com',
+          service: "gmail",
+          host: "smtp.gmail.com",
           port: 587,
           secure: false,
           auth: {
             user: process.env.EMAIL_USER || process.env.GMAIL_USER,
-            pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS
+            pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS,
           },
           tls: {
-            rejectUnauthorized: false
-          }
+            rejectUnauthorized: false,
+          },
         });
 
         // Test e-posta ayarları
@@ -2174,8 +2392,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center; border: 2px solid #EF4444;">
                   <h3 style="color: #991B1B; margin: 0 0 10px 0; font-size: 18px;">🧪 TEST E-POSTASI</h3>
                   <p style="color: #B91C1C; margin: 0; font-size: 14px; line-height: 1.6; font-weight: 500;">
-                    Bu bir test e-postasıdır. Test türü: <strong>${testType || 'aylik_ozet'}</strong><br>
-                    ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')} tarihinde gönderildi.
+                    Bu bir test e-postasıdır. Test türü: <strong>${testType || "aylik_ozet"}</strong><br>
+                    ${new Date().toLocaleDateString("tr-TR")} ${new Date().toLocaleTimeString("tr-TR")} tarihinde gönderildi.
                   </p>
                 </div>
                 
@@ -2185,10 +2403,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     📊 Test Raporu
                   </h1>
                   <p style="color: #64748B; margin: 0; font-size: 16px; font-weight: 500;">
-                    ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Dönemi - Berat Çakıroğlu
+                    ${new Date().toLocaleDateString("tr-TR", { month: "long", year: "numeric" })} Dönemi - Berat Çakıroğlu
                   </p>
                   <p style="color: #9CA3AF; margin: 5px 0 0 0; font-size: 12px;">
-                    Test Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}
+                    Test Rapor Tarihi: ${new Date().toLocaleDateString("tr-TR")} ${new Date().toLocaleTimeString("tr-TR")}
                   </p>
                 </div>
 
@@ -2227,42 +2445,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     📧 Bu test e-postası Berat Çakıroğlu Analiz Sistemi tarafından gönderildi
                   </p>
                   <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
-                    📱 Test türü: ${testType || 'aylik_ozet'} | 📋 PDF test raporu ekte
+                    📱 Test türü: ${testType || "aylik_ozet"} | 📋 PDF test raporu ekte
                   </p>
                 </div>
               </div>
             </div>
           `,
-          attachments: [{
-            filename: `test-raporu-${testType || 'aylik_ozet'}-${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf'
-          }]
+          attachments: [
+            {
+              filename: `test-raporu-${testType || "aylik_ozet"}-${new Date().toLocaleDateString("tr-TR").replace(/\./g, "-")}.pdf`,
+              content: pdfBuffer,
+              contentType: "application/pdf",
+            },
+          ],
         };
 
         // E-postayı gönder
         if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-          transporter.sendMail(mailOptions)
+          transporter
+            .sendMail(mailOptions)
             .then(() => {
-              res.json({ 
-                message: `Test e-postası başarıyla gönderildi! Test türü: ${testType || 'aylik_ozet'}`,
-                testType: testType || 'aylik_ozet',
-                emailSent: true
+              res.json({
+                message: `Test e-postası başarıyla gönderildi! Test türü: ${testType || "aylik_ozet"}`,
+                testType: testType || "aylik_ozet",
+                emailSent: true,
               });
             })
             .catch((emailError) => {
-              console.error('Test email gönderim hatası:', emailError);
-              res.status(500).json({ 
+              console.error("Test email gönderim hatası:", emailError);
+              res.status(500).json({
                 message: `Test e-posta gönderiminde hata: ${emailError.message}`,
-                testType: testType || 'aylik_ozet',
-                emailSent: false
+                testType: testType || "aylik_ozet",
+                emailSent: false,
               });
             });
         } else {
-          res.json({ 
-            message: "E-posta kimlik bilgileri yapılandırılmamış - Test PDF oluşturuldu",
-            testType: testType || 'aylik_ozet',
-            emailSent: false
+          res.json({
+            message:
+              "E-posta kimlik bilgileri yapılandırılmamış - Test PDF oluşturuldu",
+            testType: testType || "aylik_ozet",
+            emailSent: false,
           });
         }
       });
@@ -2270,10 +2492,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // PDF içeriği oluştur
       generatePDFContent(doc, scenario.reportData);
       doc.end();
-      
     } catch (error) {
-      console.error('Test email error:', error);
-      res.status(500).json({ message: "Test e-posta gönderiminde hata oluştu" });
+      console.error("Test email error:", error);
+      res
+        .status(500)
+        .json({ message: "Test e-posta gönderiminde hata oluştu" });
     }
   });
 
