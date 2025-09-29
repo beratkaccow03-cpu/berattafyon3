@@ -1861,7 +1861,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pdfBuffer = Buffer.concat(buffers);
         
         // Gmail SMTP konfigürasyonu
-        const transporter = nodemailer.createTransporter({
+        const transporter = nodemailer.createTransport({
           service: 'gmail',
           host: 'smtp.gmail.com',
           port: 587,
