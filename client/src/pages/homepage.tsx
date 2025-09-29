@@ -302,9 +302,9 @@ export default function Homepage() {
     },
     onSuccess: (response) => {
       toast({
-        title: "Başarılı!",
-        description: response.message || "Rapor başarıyla gönderildi!",
-        duration: 5000,
+        title: "Raporum Eposta Adresime Gönderildi !",
+        description: "",
+        duration: 1500,
       });
       setShowReportModal(false);
     },
