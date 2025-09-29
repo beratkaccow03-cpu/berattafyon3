@@ -176,7 +176,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Net Calculator API route
   app.post("/api/calculate-ranking", async (req, res) => {
     try {
-      const { tytNets, aytNets, year } = req.body;
+      const { nets, year } = req.body;
+      
+      // Extract and validate nets from the new format
+      let tytNets = 0;
+      let aytNets = 0;
+      
+      // Calculate total TYT nets
+      if (nets?.tyt) {
+        const tyt = nets.tyt;
+        tytNets = (parseFloat(tyt.turkce) || 0) + 
+                  (parseFloat(tyt.sosyal) || 0) + 
+                  (parseFloat(tyt.matematik) || 0) + 
+                  (parseFloat(tyt.fen) || 0);
+      }
+      
+      // Calculate total AYT nets
+      if (nets?.ayt) {
+        const ayt = nets.ayt;
+        aytNets = (parseFloat(ayt.matematik) || 0) + 
+                  (parseFloat(ayt.fizik) || 0) + 
+                  (parseFloat(ayt.kimya) || 0) + 
+                  (parseFloat(ayt.biyoloji) || 0);
+      }
 
       // 2023-2025 YKS sıralama verileri (yaklaşık değerler)
       const rankingData: Record<string, any> = {
@@ -232,13 +254,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const yearData = rankingData[year] || rankingData["2024"];
 
+      // Ensure we have valid numbers
+      if (isNaN(tytNets)) tytNets = 0;
+      if (isNaN(aytNets)) aytNets = 0;
+
       // Net'i puana çevirme (yaklaşık formül)
       const tytScore = tytNets * 4; // Her doğru ~4 puan
       const aytScore = aytNets * 4; // Her doğru ~4 puan
 
       // Ağırlıklı toplam puan
-      const totalScore =
-        tytScore * yearData.tytWeight + aytScore * yearData.aytWeight;
+      const totalScore = tytScore * yearData.tytWeight + aytScore * yearData.aytWeight;
 
       // En yakın sıralamayı bul
       let estimatedRanking = 500000; // Varsayılan
