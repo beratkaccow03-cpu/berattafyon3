@@ -1545,7 +1545,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalActivities: 4
       };
 
-      const PDFDocument = require('pdfkit');
+      const PDFDocument = PDFKit;
       const doc = new PDFDocument({ size: 'A4', margin: 50 });
       
       // PDF içeriği oluştur
