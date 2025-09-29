@@ -1752,6 +1752,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
        );
   };
 
+  // PDF Download Endpoint - Kullanıcı PDF'i görebilsin
+  app.get("/api/download-report", async (req, res) => {
+    try {
+      const reportData = {
+        totalQuestions: 52,
+        correctAnswers: 43,
+        wrongAnswers: 9,
+        totalExams: 2,
+        totalTasks: 1,
+        totalActivities: 4
+      };
+
+      const PDFDocument = require('pdfkit');
+      const doc = new PDFDocument({ size: 'A4', margin: 50 });
+      
+      // PDF içeriği oluştur
+      generatePDFContent(doc, reportData);
+      
+      // Response headers
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'attachment; filename="Berat_Cakiroglu_Rapor.pdf"');
+      
+      // PDF stream'ini response'a pipe et
+      doc.pipe(res);
+      doc.end();
+      
+    } catch (error) {
+      console.error('PDF download error:', error);
+      res.status(500).json({ message: "PDF oluşturulurken hata oluştu" });
+    }
+  });
+
   // PDF Report Email Endpoint - Enhanced implementation with validation
   app.post("/api/send-report", async (req, res) => {
     try {
