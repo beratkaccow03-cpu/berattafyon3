@@ -1447,7 +1447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
   };
 
-  // PDF İçerik Oluşturma Fonksiyonu - Tek Sayfa, Temiz Tasarım
+  // PDF İçerik Oluşturma Fonksiyonu - Modern Tasarım
   const generatePDFContent = (doc: any, reportData: any) => {
     // Sayfa boyutları
     const pageWidth = 595;
@@ -1455,18 +1455,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const margin = 50;
     const contentWidth = pageWidth - (margin * 2);
     
-    // Temiz renkler
+    // Modern renkler
     const colors = {
       purple: '#8B5CF6',
       green: '#10B981', 
       red: '#EF4444',
       orange: '#F59E0B',
       blue: '#3B82F6',
-      gray: '#6B7280'
+      gray: '#6B7280',
+      darkBlue: '#1E293B',
+      lightGray: '#F8FAFC'
     };
 
-    // Üst başlık - Mor arka plan
-    doc.rect(0, 0, pageWidth, 130).fill(colors.purple);
+    // Türk Bayrağı ve Atatürk için görsel alanlar (simulated)
+    // Sol üst köşe - Türk Bayrağı alanı
+    doc.rect(15, 15, 60, 40).fill('#E53E3E');
+    doc.fontSize(8).fillColor('#FFFFFF').font('Helvetica-Bold')
+       .text('TURK', 25, 25)
+       .text('BAYRAGI', 20, 35);
+    
+    // Sağ üst köşe - Atatürk alanı
+    doc.rect(pageWidth - 75, 15, 60, 40).fill(colors.darkBlue);
+    doc.fontSize(8).fillColor('#FFFFFF').font('Helvetica-Bold')
+       .text('ATATURK', pageWidth - 70, 25)
+       .text('PORTRE', pageWidth - 65, 35);
+
+    // Üst başlık - Gradient efekti simülasyonu
+    doc.rect(0, 70, pageWidth, 130).fill(colors.purple);
     
     // Ana başlık - emoji olmadan, temiz
     doc.fontSize(22)
@@ -1860,11 +1875,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         to: email,
         subject: `📊 Aylık Aktivite Raporu - ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`,
         html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 16px;">
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 16px; position: relative;">
+            <!-- Türk Bayrağı Sol Üst -->
+            <div style="position: absolute; top: 20px; left: 20px; width: 60px; height: 40px; background: #E53E3E; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 24px; height: 24px; border: 2px solid white; border-radius: 50%; position: relative;">
+                <div style="position: absolute; top: 6px; right: 4px; width: 8px; height: 8px; background: white; transform: rotate(45deg);"></div>
+              </div>
+            </div>
+            
+            <!-- Atatürk Portresi Sağ Üst -->
+            <div style="position: absolute; top: 20px; right: 20px; width: 60px; height: 40px; background: #1E293B; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: white; font-size: 8px; text-align: center;">
+              🇹🇷<br>ATATÜRK
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); margin-top: 20px;">
               <div style="text-align: center; margin-bottom: 30px;">
                 <h1 style="color: #4F46E5; margin: 0; font-size: 28px; font-weight: bold;">📊 Aylık Aktivite Raporu</h1>
                 <p style="color: #6B7280; margin: 10px 0 0 0; font-size: 16px;">${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Dönemi</p>
+                <p style="color: #8B5CF6; margin: 5px 0 0 0; font-size: 12px; font-weight: 600;">🏛️ Berat Çakıroğlu Özel Analiz Sistemi</p>
               </div>
               
               <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 20px; border-radius: 8px; margin-bottom: 25px;">

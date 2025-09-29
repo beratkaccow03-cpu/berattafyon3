@@ -152,8 +152,8 @@ export function TodaysTasksWidget() {
       {tasks.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Calendar className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Bugün için görev bulunmuyor</p>
-          <p className="text-xs mt-1">Yeni görevler eklemek için Yapılacaklar sayfasına git</p>
+          <p className="text-sm">Bugün hiç aktivite tamamlanmamış !</p>
+          <p className="text-xs mt-1">Bugün için planlanan görevler henüz yok</p>
         </div>
       ) : (
         <>
@@ -166,7 +166,7 @@ export function TodaysTasksWidget() {
           </div>
 
           {/* Görev Listesi - Kutunun en altına kadar uzar */}
-          <div className="space-y-3 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          <div className={`space-y-3 flex-1 min-h-0 ${tasks.length > 7 ? 'overflow-y-auto' : 'overflow-hidden'} custom-scrollbar max-h-96`}>
             {tasks.map((task) => (
               <div
                 key={task.id}
@@ -182,28 +182,29 @@ export function TodaysTasksWidget() {
                 }}
                 data-testid={`list-task-${task.id}`}
               >
-                {/* Celebration efekti */}
+                {/* Celebration efekti - Enhanced */}
                 {celebratingTask === task.id && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 animate-pulse rounded-lg pointer-events-none">
-                    <div className="absolute top-2 right-2">
-                      <PartyPopper className="h-5 w-5 text-green-600 animate-bounce" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/30 to-emerald-400/30 animate-pulse rounded-lg pointer-events-none">
+                    <div className="absolute top-2 right-2 animate-bounce">
+                      <PartyPopper className="h-5 w-5 text-green-600 drop-shadow-lg" />
                     </div>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-ping"></div>
                   </div>
                 )}
                 <button
                   onClick={() => toggleTaskMutation.mutate(task.id)}
-                  className={`flex-shrink-0 transition-colors duration-200 ${
+                  className={`flex-shrink-0 transition-all duration-300 transform hover:scale-110 ${
                     task.completed 
-                      ? 'text-primary hover:text-primary/80' 
-                      : 'text-muted-foreground hover:text-primary'
+                      ? 'text-green-600 hover:text-green-500 drop-shadow-md' 
+                      : 'text-muted-foreground hover:text-primary hover:drop-shadow-md'
                   }`}
                   disabled={toggleTaskMutation.isPending}
                   data-testid={`button-toggle-task-${task.id}`}
                 >
                   {task.completed ? (
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-5 w-5 animate-in fade-in-0 zoom-in-95 duration-200" />
                   ) : (
-                    <Circle className="h-5 w-5" />
+                    <Circle className="h-5 w-5 hover:animate-pulse" />
                   )}
                 </button>
                 
