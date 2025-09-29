@@ -21,7 +21,7 @@ import nodemailer from "nodemailer";
 dotenv.config();
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Task routes
+  // Görev routes
   app.get("/api/tasks", async (req, res) => {
     try {
       const tasks = await storage.getTasks();
@@ -99,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mood routes
+  // Ruh hali routes
   app.get("/api/moods", async (req, res) => {
     try {
       const moods = await storage.getMoods();
@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Dashboard and Calendar routes
+  // raporlarım ve takvim kısmı routes
   app.get("/api/summary/daily", async (req, res) => {
     try {
       const range = parseInt(req.query.range as string) || 30;
@@ -147,14 +147,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/calendar/:date", async (req, res) => {
     try {
-      const { date } = req.params; // YYYY-MM-DD format
+      const { date } = req.params; // YYYY-AA-GG format
       const tasksForDate = await storage.getTasksByDate(date);
 
-      // Calculate days remaining from today
+      // günlük kalan gün sayısı hesaplama
       const today = new Date();
       const targetDate = new Date(date);
-      
-      // Set both dates to midnight to compare just the date part
+
+      // Her iki tarihi de karşılaştırmak için gece yarısına ayarlama
       today.setHours(0, 0, 0, 0);
       targetDate.setHours(0, 0, 0, 0);
       
@@ -173,16 +173,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Net Calculator API route
+  // NET HESAPLAMA
   app.post("/api/calculate-ranking", async (req, res) => {
     try {
       const { nets, year } = req.body;
       
-      // Extract and validate nets from the new format
+      // nets objesi örneği:
       let tytNets = 0;
       let aytNets = 0;
       
-      // Calculate total TYT nets
+      // TYT neti hesaplama
       if (nets?.tyt) {
         const tyt = nets.tyt;
         tytNets = (parseFloat(tyt.turkce) || 0) + 
@@ -191,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   (parseFloat(tyt.fen) || 0);
       }
       
-      // Calculate total AYT nets
+      // AYT neti hesaplama
       if (nets?.ayt) {
         const ayt = nets.ayt;
         aytNets = (parseFloat(ayt.matematik) || 0) + 
@@ -201,6 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // 2023-2025 YKS sıralama verileri (yaklaşık değerler)
+      //burası kullanılmayacak
       const rankingData: Record<string, any> = {
         "2023": {
           tytWeight: 0.4,
@@ -254,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const yearData = rankingData[year] || rankingData["2024"];
 
-      // Ensure we have valid numbers
+      // numarasal hatalara karşı kontrol
       if (isNaN(tytNets)) tytNets = 0;
       if (isNaN(aytNets)) aytNets = 0;
 
@@ -355,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Weather API - Real OpenWeather API integration for Sakarya, Serdivan
+  // Sakarya,serdivan için hava durumu route
   app.get("/api/weather", async (req, res) => {
     try {
       const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY;
@@ -364,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!OPENWEATHER_API_KEY) {
         console.log("OpenWeather API key not found, using static data");
-        // Fallback to static weather data if API key not configured
+        // API anahtarı yoksa statik veri kullan
         currentData = {
           main: {
             temp: 18,
@@ -393,30 +394,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         uvData = { value: 4 };
       } else {
-        // Real OpenWeather API calls for Sakarya, Serdivan (lat: 40.7969, lon: 30.3781)
+        // Sakarya, Serdivan için gerçek OpenWeather API çağrıları (lat: 40.7969, lon: 30.3781)
         const lat = 40.7969;
         const lon = 30.3781;
 
         try {
-          // Current weather
+          // hava durumu
           const currentResponse = await fetch(
             `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=tr`,
           );
           currentData = await currentResponse.json();
 
-          // 5-day forecast
+          // 5 günlük tahmin
           const forecastResponse = await fetch(
             `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}&units=metric&lang=tr`,
           );
           forecastData = await forecastResponse.json();
 
-          // Air quality
+          // hava kalitesi
           const airQualityResponse = await fetch(
             `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`,
           );
           airQualityData = await airQualityResponse.json();
 
-          // UV Index
+          // uv indeksi
           const uvResponse = await fetch(
             `https://api.openweathermap.org/data/2.5/uvi?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`,
           );
@@ -426,7 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             "OpenWeather API error, falling back to static data:",
             apiError,
           );
-          // Use static data as fallback
+          // geriye statik veri döndür
           currentData = {
             main: {
               temp: 18,
@@ -455,19 +456,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Helper function to get weather emoji
+      // emoji fonksiyonu
       const getWeatherEmoji = (weatherId: number, isDay: boolean = true) => {
-        if (weatherId >= 200 && weatherId < 300) return "⛈️"; // thunderstorm
-        if (weatherId >= 300 && weatherId < 400) return "🌦️"; // drizzle
-        if (weatherId >= 500 && weatherId < 600) return "🌧️"; // rain
-        if (weatherId >= 600 && weatherId < 700) return "❄️"; // snow
-        if (weatherId >= 700 && weatherId < 800) return "🌫️"; // atmosphere
-        if (weatherId === 800) return isDay ? "☀️" : "🌙"; // clear
-        if (weatherId > 800) return isDay ? "⛅" : "☁️"; // clouds
+        if (weatherId >= 200 && weatherId < 300) return "⛈️"; // gök gürültülü
+        if (weatherId >= 300 && weatherId < 400) return "🌦️"; // hafif yağmur
+        if (weatherId >= 500 && weatherId < 600) return "🌧️"; // yağmur
+        if (weatherId >= 600 && weatherId < 700) return "❄️"; // kar
+        if (weatherId >= 700 && weatherId < 800) return "🌫️"; // sis
+        if (weatherId === 800) return isDay ? "☀️" : "🌙"; // açık
+        if (weatherId > 800) return isDay ? "⛅" : "☁️"; // bulutlu
         return "🌤️";
       };
 
-      // Generate hourly forecast for next 12 hours
+      // 12 saatlik tahmin işleme
       const hourlyForecast = [];
       const currentHour = new Date().getHours();
 
@@ -475,33 +476,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const hour = (currentHour + i) % 24;
         const isDay = hour >= 6 && hour <= 19;
 
-        // Vary temperature throughout the day
-        let temp = 18; // Base temperature
+        // Gün boyunca sıcaklık değişimi
+        let temp = 18; // Temel sıcaklık
         if (hour >= 6 && hour <= 8)
-          temp = 16; // Morning cooler
+          temp = 16; // Sabah serin
         else if (hour >= 9 && hour <= 11)
-          temp = 19; // Late morning warmer
+          temp = 19; // Geç sabah sıcak
         else if (hour >= 12 && hour <= 15)
-          temp = 21; // Afternoon warmest
+          temp = 21; // Öğle en sıcak
         else if (hour >= 16 && hour <= 18)
-          temp = 20; // Evening cooling
+          temp = 20; // Akşam serin
         else if (hour >= 19 && hour <= 21)
-          temp = 18; // Night cooling
-        else temp = 15; // Late night coolest
+          temp = 18; // Gece serin
+        else temp = 15; // Gece en serin
 
-        // Add some randomness but keep realistic
-        temp += Math.floor(Math.random() * 3) - 1; // ±1°C variation
+        // Rastgelelik ekle ama gerçekçi tut
+        temp += Math.floor(Math.random() * 3) - 1; // ±1°C
 
-        // Weather conditions - mix of conditions for variety
-        let weatherId = 800; // Clear by default
+        // Hava durumu koşulları - çeşitlilik için karışım
+        let weatherId = 800; // Açık varsayılan
         let precipitation = 0;
 
         if (i === 2 || i === 3) {
-          weatherId = 801; // Few clouds
+          weatherId = 801; // Az bulutlu
         } else if (i === 5 || i === 6) {
-          weatherId = 802; // Scattered clouds
+          weatherId = 802; // Parçalı bulutlu
         } else if (i === 8) {
-          weatherId = 500; // Light rain
+          weatherId = 500; // Hafif yağmur
           precipitation = 0.5;
         }
 
@@ -510,9 +511,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hour: hour,
           temperature: temp,
           emoji: getWeatherEmoji(weatherId, isDay),
-          humidity: 75 + Math.floor(Math.random() * 10) - 5, // 70-80% humidity
-          windSpeed: 8 + Math.floor(Math.random() * 6), // 8-14 km/h wind
-          windDirection: 180 + Math.floor(Math.random() * 60) - 30, // Varying wind direction
+          humidity: 75 + Math.floor(Math.random() * 10) - 5, // 70-80% nem
+          windSpeed: 8 + Math.floor(Math.random() * 6), // 8-14 km/h rüzgar
+          windDirection: 180 + Math.floor(Math.random() * 60) - 30, // Değişken rüzgar yönü
           precipitation: precipitation,
           description:
             weatherId === 800
@@ -525,13 +526,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Enhanced 7-day forecast processing with specific weather data
+      // 7 günlük tahmin işleme
       const dailyForecast: any[] = [];
       const today = new Date();
 
-      // Custom forecast data for specific days
+      // Özel günler için tahmin verileri
       const customForecast = [
-        // Today - use current weather
+        // Bugün - mevcut hava durumunu kullan
         {
           date: today.toISOString().split("T")[0],
           dayName: today.toLocaleDateString("tr-TR", { weekday: "short" }),
@@ -550,7 +551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       ];
 
-      // Add next 6 days with custom data
+      // 6 günlük özel tahmin verisi
       for (let i = 1; i <= 6; i++) {
         const forecastDate = new Date(today);
         forecastDate.setDate(today.getDate() + i);
@@ -560,7 +561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         let weatherData;
         switch (dayName.toLowerCase()) {
-          case "çar": // Wednesday
+          case "çar": // carsamba
             weatherData = {
               temperature: { max: 18, min: 12 },
               description: "sis",
@@ -569,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               windSpeed: 8,
             };
             break;
-          case "per": // Thursday
+          case "per": // perşembe
             weatherData = {
               temperature: { max: 19, min: 13 },
               description: "gökgürültülü sağanak",
@@ -578,7 +579,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               windSpeed: 15,
             };
             break;
-          case "cum": // Friday
+          case "cum": // cuma
             weatherData = {
               temperature: { max: 19, min: 13 },
               description: "gökgürültülü sağanak",
@@ -587,7 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               windSpeed: 12,
             };
             break;
-          case "cmt": // Saturday
+          case "cmt": // cumartesi
             weatherData = {
               temperature: { max: 18, min: 12 },
               description: "yağmurlu",
@@ -596,7 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               windSpeed: 10,
             };
             break;
-          case "paz": // Sunday
+          case "paz": // pazar
             weatherData = {
               temperature: { max: 19, min: 13 },
               description: "gökgürültülü sağanak",
@@ -606,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
             break;
           default:
-            // Default weather for any other days
+            // diğer günler için genel tahmin
             weatherData = {
               temperature: { max: 20, min: 14 },
               description: "parçalı bulutlu",
@@ -623,16 +624,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Use custom forecast data
+      // custom forecast'u dailyForecast'a ekle
       dailyForecast.push(...customForecast);
 
-      // Current weather
+      // hava durumu detayları
       const now = new Date();
       const sunrise = new Date(currentData.sys.sunrise * 1000);
       const sunset = new Date(currentData.sys.sunset * 1000);
       const isDay = now > sunrise && now < sunset;
 
-      // UV Index from dedicated API or calculated estimate
+      // UV indeksi hesaplama (gerçek UV API'si başarısız olursa yedek)
       const getUVIndex = () => {
         if (uvData && uvData.value !== undefined) {
           const uvValue = Math.round(uvData.value);
@@ -658,7 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return { value: uvValue, level, description };
         }
 
-        // Fallback calculation if UV API fails
+        // uv API yoksa basit hesaplama
         if (!isDay)
           return {
             value: 0,
@@ -686,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return { value: 3, level: "Orta", description: "Orta seviye risk" };
       };
 
-      // Air quality
+      // hava kalitesi hesaplama
       const airQuality = airQualityData
         ? {
             aqi: airQualityData.list[0].main.aqi,
@@ -706,7 +707,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         : null;
 
-      // Enhanced Lifestyle indices with more accurate calculations
+      // Geliştirilmiş yaşam tarzı indeksleri
       const temp = currentData.main.temp;
       const windSpeed = Math.round(currentData.wind.speed * 3.6);
       const humidity = currentData.main.humidity;
@@ -874,7 +875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Question log routes
+  // cevap logları routes
   app.get("/api/question-logs", async (req, res) => {
     try {
       const logs = await storage.getQuestionLogs();
@@ -944,7 +945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Topic statistics routes
+  // Konu istatistikleri routes
   app.get("/api/topics/stats", async (req, res) => {
     try {
       const stats = await storage.getTopicStats();
@@ -972,7 +973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Exam result routes
+  // Sınav sonuçları routes
   app.get("/api/exam-results", async (req, res) => {
     try {
       const results = await storage.getExamResults();
@@ -987,12 +988,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertExamResultSchema.parse(req.body);
       const result = await storage.createExamResult(validatedData);
 
-      // If subjects_data is provided, create exam subject nets
+      // Eğer subjects_data sağlanmışsa, sınav konu netleri oluştur
       if (validatedData.subjects_data) {
         try {
           const subjectsData = JSON.parse(validatedData.subjects_data);
 
-          // Create subject nets for each subject with data
+          // Her konu için veri ile konu netleri oluştur
           for (const [subjectName, subjectData] of Object.entries(
             subjectsData,
           )) {
@@ -1003,7 +1004,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const blank = parseInt(data.blank) || 0;
               const netScore = correct - wrong * 0.25;
 
-              // Subject name mapping
+              // ders isimlerini Türkçe'ye çevir
               const subjectNameMap: { [key: string]: string } = {
                 turkce: "Türkçe",
                 matematik: "Matematik",
@@ -1014,7 +1015,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 biyoloji: "Biyoloji",
               };
 
-              // Determine exam type based on subject
+              // dersin TYT mi AYT mi olduğunu belirle
               const isTYTSubject = [
                 "turkce",
                 "matematik",
@@ -1035,7 +1036,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 blank_count: blank.toString(),
               });
 
-              // Create question logs for wrong topics if any
+              // yanlış yapılan konular loglarını oluştur
               if (
                 data.wrong_topics &&
                 data.wrong_topics.length > 0 &&
@@ -1095,7 +1096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Exam Subject Nets routes
+  // örnek ders netleri routes
   app.get("/api/exam-subject-nets", async (req, res) => {
     try {
       const nets = await storage.getExamSubjectNets();
@@ -1195,7 +1196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete exam subject nets" });
     }
   });
-
+  //ARTIK KULLANMAYACAĞIMIZ ROUTESLAR
   // Flashcard routes - commented out until implementation is complete
   /*
   app.get("/api/flashcards", async (req, res) => {
