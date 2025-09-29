@@ -1446,428 +1446,332 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
   };
 
-  // PDF İçerik Oluşturma Fonksiyonu - Modern Tasarım ile Türkçe Karakter Desteği
+  // PDF İçerik Oluşturma Fonksiyonu - Tek Sayfa, Temiz Tasarım
   const generatePDFContent = (doc: any, reportData: any) => {
     // Sayfa boyutları
     const pageWidth = 595;
     const pageHeight = 842;
-    const margin = 40;
+    const margin = 50;
     const contentWidth = pageWidth - (margin * 2);
     
-    // Modern renkler
+    // Temiz renkler
     const colors = {
-      primary: '#8B5CF6',    // Purple
-      secondary: '#A855F7',   // Light Purple  
-      success: '#10B981',     // Green
-      warning: '#F59E0B',     // Orange
-      danger: '#EF4444',      // Red
-      info: '#3B82F6',        // Blue
-      gray: '#6B7280',
-      darkGray: '#374151',
-      lightGray: '#F3F4F6'
+      purple: '#8B5CF6',
+      green: '#10B981', 
+      red: '#EF4444',
+      orange: '#F59E0B',
+      blue: '#3B82F6',
+      gray: '#6B7280'
     };
 
-    // Arka plan gradient efekti
-    doc.rect(0, 0, pageWidth, 150).fill('#8B5CF6');
-    doc.rect(0, 0, pageWidth, 150).fillOpacity(0.1).fill('#FFFFFF');
+    // Üst başlık - Mor arka plan
+    doc.rect(0, 0, pageWidth, 130).fill(colors.purple);
     
-    // Türk bayrağı (sağ üst köşe) - küçük boyut
-    try {
-      doc.image('attached_assets/stock_images/turkish_flag_turkey__34684b61.jpg', 
-        pageWidth - 100, 20, { width: 70, height: 45 });
-    } catch (e) {
-      // Resim yüklenemezse kırmızı dikdörtgen çiz
-      doc.rect(pageWidth - 100, 20, 70, 45).fill('#E53E3E');
-      doc.fontSize(8).fillColor('white').text('🇹🇷', pageWidth - 75, 35);
-    }
-    
-    // Atatürk resmi (sol üst köşe) - küçük boyut  
-    try {
-      doc.image('attached_assets/stock_images/atatürk_portrait_pro_93bf3b8c.jpg',
-        20, 20, { width: 70, height: 90 });
-    } catch (e) {
-      // Resim yüklenemezse gri dikdörtgen çiz
-      doc.rect(20, 20, 70, 90).fill('#9CA3AF');
-      doc.fontSize(10).fillColor('white').text('ATATÜRK', 25, 60);
-    }
-
-    // Ana başlık - Modern tipografi
-    doc.fontSize(28)
+    // Ana başlık - emoji olmadan, temiz
+    doc.fontSize(22)
        .fillColor('#FFFFFF')
        .font('Helvetica-Bold')
-       .text('Eylül 2025 Aylık Analiz Raporum', margin, 130, { align: 'center', width: contentWidth });
+       .text('Eylul 2025 Aylik Analiz Raporum', margin, 35, { align: 'center', width: contentWidth });
     
-    // Alt başlık - Kalp emoji ile
-    doc.fontSize(18)
+    // Alt başlık 
+    doc.fontSize(16)
        .fillColor('#FFFFFF')
        .font('Helvetica')
-       .text('💜 Berat Çakıroğlu Özel Aylık Raporu', margin, 165, { align: 'center', width: contentWidth });
+       .text('Berat Cakiroglu Ozel Aylik Raporu', margin, 65, { align: 'center', width: contentWidth });
     
-    // Rapor tarihi
-    const currentDate = new Date().toLocaleDateString('tr-TR', { 
-      day: 'numeric', 
-      month: 'long', 
-      year: 'numeric' 
-    });
+    // Tarih
+    const currentDate = '27.09.2025';
     doc.fontSize(12)
        .fillColor('#E5E7EB')
        .font('Helvetica')
-       .text(`Rapor Oluşturulma Tarihi: ${currentDate}`, margin, 195, { align: 'center', width: contentWidth });
+       .text(`Rapor Olusturulma Tarihi: ${currentDate}`, margin, 90, { align: 'center', width: contentWidth });
 
-    let yPosition = 250;
+    let yPosition = 160;
 
-    // "Ders Takip Analiz Sistemim" başlığı - mor arka plan
-    doc.rect(margin, yPosition, contentWidth, 40)
-       .fill(colors.primary);
+    // Ders Takip Analiz Sistemim başlığı
+    doc.rect(margin, yPosition, contentWidth, 30)
+       .fill(colors.purple);
     
-    doc.fontSize(16)
+    doc.fontSize(14)
        .fillColor('#FFFFFF')
        .font('Helvetica-Bold')
-       .text('📚 Ders Takip Analiz Sistemim', margin + 10, yPosition + 12);
+       .text('Ders Takip Analiz Sistemim', margin + 10, yPosition + 8);
     
-    yPosition += 60;
+    yPosition += 50;
 
-    // Renkli istatistik kartları - 2x2 grid
+    // Ana istatistik kartları - 2x2 düzen, daha kompakt
     const cardWidth = (contentWidth - 20) / 2;
-    const cardHeight = 80;
+    const cardHeight = 70;
     const cardSpacing = 20;
 
-    // Kart 1: Toplam Soru (mor)
-    doc.rect(margin, yPosition, cardWidth, cardHeight)
-       .fill('#8B5CF6');
-    doc.fontSize(36)
+    // Kart 1: Toplam Soru
+    doc.rect(margin, yPosition, cardWidth, cardHeight).fill(colors.purple);
+    doc.fontSize(28)
        .fillColor('#FFFFFF')
        .font('Helvetica-Bold')
-       .text(String(reportData.totalQuestions || 52), margin + 10, yPosition + 15);
-    doc.fontSize(14)
+       .text('52', margin + cardWidth/2 - 15, yPosition + 15, { align: 'center' });
+    doc.fontSize(12)
        .fillColor('#FFFFFF')
        .font('Helvetica')
-       .text('Toplam Soru', margin + 10, yPosition + 55);
+       .text('Toplam Soru', margin + 10, yPosition + 50);
 
-    // Kart 2: Doğru Sayısı (yeşil)
-    doc.rect(margin + cardWidth + cardSpacing, yPosition, cardWidth, cardHeight)
-       .fill('#10B981');
-    doc.fontSize(36)
+    // Kart 2: Doğru Sayısı
+    doc.rect(margin + cardWidth + cardSpacing, yPosition, cardWidth, cardHeight).fill(colors.green);
+    doc.fontSize(28)
        .fillColor('#FFFFFF')
        .font('Helvetica-Bold')
-       .text(String(reportData.correctAnswers || 43), margin + cardWidth + cardSpacing + 10, yPosition + 15);
-    doc.fontSize(14)
+       .text('43', margin + cardWidth + cardSpacing + cardWidth/2 - 15, yPosition + 15, { align: 'center' });
+    doc.fontSize(12)
        .fillColor('#FFFFFF')
        .font('Helvetica')
-       .text('Doğru Sayısı', margin + cardWidth + cardSpacing + 10, yPosition + 55);
+       .text('Dogru Sayisi', margin + cardWidth + cardSpacing + 10, yPosition + 50);
 
     yPosition += cardHeight + 10;
 
-    // Kart 3: Yanlış Sayısı (kırmızı)
-    doc.rect(margin, yPosition, cardWidth, cardHeight)
-       .fill('#EF4444');
-    doc.fontSize(36)
+    // Kart 3: Yanlış Sayısı
+    doc.rect(margin, yPosition, cardWidth, cardHeight).fill(colors.red);
+    doc.fontSize(28)
        .fillColor('#FFFFFF')
        .font('Helvetica-Bold')
-       .text(String(reportData.wrongAnswers || 9), margin + 10, yPosition + 15);
-    doc.fontSize(14)
+       .text('9', margin + cardWidth/2 - 10, yPosition + 15, { align: 'center' });
+    doc.fontSize(12)
        .fillColor('#FFFFFF')
        .font('Helvetica')
-       .text('Yanlış Sayısı', margin + 10, yPosition + 55);
+       .text('Yanlis Sayisi', margin + 10, yPosition + 50);
 
-    // Kart 4: Yapılan Deneme (turuncu)
-    doc.rect(margin + cardWidth + cardSpacing, yPosition, cardWidth, cardHeight)
-       .fill('#F59E0B');
-    doc.fontSize(36)
+    // Kart 4: Yapılan Deneme
+    doc.rect(margin + cardWidth + cardSpacing, yPosition, cardWidth, cardHeight).fill(colors.orange);
+    doc.fontSize(28)
        .fillColor('#FFFFFF')
        .font('Helvetica-Bold')
-       .text(String(reportData.totalExams || 2), margin + cardWidth + cardSpacing + 10, yPosition + 15);
-    doc.fontSize(14)
+       .text('2', margin + cardWidth + cardSpacing + cardWidth/2 - 10, yPosition + 15, { align: 'center' });
+    doc.fontSize(12)
        .fillColor('#FFFFFF')
        .font('Helvetica')
-       .text('Yapılan Deneme', margin + cardWidth + cardSpacing + 10, yPosition + 55);
+       .text('Yapilan Deneme', margin + cardWidth + cardSpacing + 10, yPosition + 50);
 
     yPosition += cardHeight + 30;
 
-    // Deneme Sınavı Sonuçları başlığı
-    doc.fontSize(16)
-       .fillColor(colors.danger)
+    // Deneme Sınavı Sonuçları 
+    doc.fontSize(14)
+       .fillColor(colors.red)
        .font('Helvetica-Bold')
-       .text('🎯 Deneme Sınavı Sonuçları', margin, yPosition);
+       .text('Deneme Sinavi Sonuclari', margin, yPosition);
     
-    yPosition += 30;
+    yPosition += 25;
 
-    // Deneme sınavı tablo başlığı
-    const tableHeaders = ['Deneme Adı', 'Tarih', 'TYT Net', 'AYT Net', 'Toplam Net'];
-    const colWidths = [120, 80, 80, 80, 90];
+    // Tablo başlığı
+    doc.rect(margin, yPosition, contentWidth, 20).fill(colors.purple);
+    const tableHeaders = ['Deneme Adi', 'Tarih', 'TYT Net', 'AYT Net', 'Toplam Net'];
+    const colWidths = [100, 80, 80, 80, 95];
     let xPos = margin;
 
-    // Tablo başlığı - mor arka plan
-    doc.rect(margin, yPosition, contentWidth, 25).fill(colors.primary);
-    
     tableHeaders.forEach((header, index) => {
-      doc.fontSize(10)
+      doc.fontSize(9)
          .fillColor('#FFFFFF')
          .font('Helvetica-Bold')
-         .text(header, xPos + 5, yPosition + 8);
+         .text(header, xPos + 5, yPosition + 6);
       xPos += colWidths[index];
     });
 
-    yPosition += 25;
+    yPosition += 20;
 
-    // Örnek deneme verileri
-    const exampleExams = [
-      { name: 'b', date: '27.09.2025', tytNet: '0.00', aytNet: '46.25', totalNet: '46.25' },
-      { name: 'b', date: '27.09.2025', tytNet: '59.25', aytNet: '0.00', totalNet: '59.25' }
+    // Deneme verileri
+    const examData = [
+      ['b', '27.09.2025', '0.00', '46.25', '46.25'],
+      ['b', '27.09.2025', '59.25', '0.00', '59.25']
     ];
 
-    exampleExams.forEach((exam, index) => {
+    examData.forEach((row, index) => {
       xPos = margin;
       const rowColor = index % 2 === 0 ? '#F9FAFB' : '#FFFFFF';
+      doc.rect(margin, yPosition, contentWidth, 18).fill(rowColor);
       
-      doc.rect(margin, yPosition, contentWidth, 20).fill(rowColor);
-      
-      [exam.name, exam.date, exam.tytNet, exam.aytNet, exam.totalNet].forEach((data, colIndex) => {
-        doc.fontSize(9)
-           .fillColor(colors.darkGray)
+      row.forEach((cell, colIndex) => {
+        doc.fontSize(8)
+           .fillColor('#374151')
            .font('Helvetica')
-           .text(data, xPos + 5, yPosition + 6);
+           .text(cell, xPos + 5, yPosition + 5);
         xPos += colWidths[colIndex];
       });
-      
-      yPosition += 20;
+      yPosition += 18;
     });
 
     yPosition += 20;
 
-    // TYT Ders Bazında Performans
-    doc.fontSize(16)
-       .fillColor(colors.info)
+    // TYT Ders Bazında Performans - kompakt
+    doc.fontSize(14)
+       .fillColor(colors.blue)
        .font('Helvetica-Bold')
-       .text('📖 TYT Ders Bazında Performans', margin, yPosition);
+       .text('TYT Ders Bazinda Performans', margin, yPosition);
     
-    yPosition += 30;
+    yPosition += 20;
 
-    // TYT dersleri - modern kartlar
+    // Dersler - daha kompakt
     const subjects = [
-      { name: 'Kimya', correct: 3, wrong: 1, empty: 0, net: '2.75', color: colors.info },
-      { name: 'Matematik', correct: 15, wrong: 5, empty: 0, net: '13.75', color: colors.success }
+      { name: 'Kimya', correct: '3', wrong: '1', net: '2.75' },
+      { name: 'Matematik', correct: '15', wrong: '5', net: '13.75' }
     ];
 
     subjects.forEach(subject => {
-      // Ders kartı
-      doc.rect(margin, yPosition, contentWidth, 60)
-         .fillOpacity(0.1)
-         .fill(subject.color);
-         
-      doc.rect(margin, yPosition, contentWidth, 60)
-         .strokeOpacity(1)
-         .stroke(subject.color);
+      doc.rect(margin, yPosition, contentWidth, 35)
+         .stroke(colors.blue)
+         .strokeOpacity(0.3);
       
-      doc.fontSize(14)
-         .fillColor(subject.color)
+      doc.fontSize(12)
+         .fillColor(colors.blue)
          .font('Helvetica-Bold')
-         .text(subject.name, margin + 15, yPosition + 10);
+         .text(subject.name, margin + 10, yPosition + 8);
       
-      doc.fontSize(11)
-         .fillColor(colors.darkGray)
-         .font('Helvetica')
-         .text(`Doğru: ${subject.correct}`, margin + 15, yPosition + 30)
-         .text(`Yanlış: ${subject.wrong}`, margin + 80, yPosition + 30)
-         .text(`Boş: ${subject.empty}`, margin + 150, yPosition + 30)
-         .text(`Net: ${subject.net}`, margin + 200, yPosition + 30);
-
-      yPosition += 70;
-    });
-
-    // Yeni sayfa
-    doc.addPage();
-    yPosition = margin;
-
-    // AYT Ders Bazında Performans  
-    doc.fontSize(16)
-       .fillColor(colors.warning)
-       .font('Helvetica-Bold')
-       .text('📚 AYT Ders Bazında Performans', margin, yPosition);
-    
-    yPosition += 30;
-
-    const aytSubjects = [
-      { name: 'Kimya', correct: 25, wrong: 3, empty: 0, net: '24.25', color: colors.warning }
-    ];
-
-    aytSubjects.forEach(subject => {
-      doc.rect(margin, yPosition, contentWidth, 60)
-         .fillOpacity(0.1)
-         .fill(subject.color);
-         
-      doc.rect(margin, yPosition, contentWidth, 60)
-         .strokeOpacity(1)
-         .stroke(subject.color);
-      
-      doc.fontSize(14)
-         .fillColor(subject.color)
-         .font('Helvetica-Bold')
-         .text(subject.name, margin + 15, yPosition + 10);
-      
-      doc.fontSize(11)
-         .fillColor(colors.darkGray)
-         .font('Helvetica')
-         .text(`Doğru: ${subject.correct}`, margin + 15, yPosition + 30)
-         .text(`Yanlış: ${subject.wrong}`, margin + 80, yPosition + 30)
-         .text(`Boş: ${subject.empty}`, margin + 150, yPosition + 30)
-         .text(`Net: ${subject.net}`, margin + 200, yPosition + 30);
-
-      yPosition += 70;
-    });
-
-    // Tamamlanan Görevler
-    doc.fontSize(16)
-       .fillColor(colors.success)
-       .font('Helvetica-Bold')  
-       .text('✅ Tamamlanan Görevler', margin, yPosition);
-    
-    yPosition += 30;
-
-    // Görevler tablosu başlığı
-    doc.rect(margin, yPosition, contentWidth, 25).fill(colors.success);
-    
-    const taskHeaders = ['Görev', 'Kategori', 'Tamamlanma Tarihi'];
-    const taskColWidths = [200, 150, 165];
-    xPos = margin;
-
-    taskHeaders.forEach((header, index) => {
       doc.fontSize(10)
-         .fillColor('#FFFFFF')
-         .font('Helvetica-Bold')
-         .text(header, xPos + 5, yPosition + 8);
-      xPos += taskColWidths[index];
-    });
-
-    yPosition += 25;
-
-    // Örnek görev
-    const exampleTask = { name: '10 saat çalışma', category: 'genel', date: '27.09.2025' };
-    
-    doc.rect(margin, yPosition, contentWidth, 20).fill('#F9FAFB');
-    
-    xPos = margin;
-    [exampleTask.name, exampleTask.category, exampleTask.date].forEach((data, colIndex) => {
-      doc.fontSize(9)
-         .fillColor(colors.darkGray)
+         .fillColor('#374151')
          .font('Helvetica')
-         .text(data, xPos + 5, yPosition + 6);
-      xPos += taskColWidths[colIndex];
+         .text(`Dogru: ${subject.correct}`, margin + 10, yPosition + 22)
+         .text(`Yanlis: ${subject.wrong}`, margin + 100, yPosition + 22)
+         .text(`Net: ${subject.net}`, margin + 180, yPosition + 22);
+
+      yPosition += 35;
     });
+
+    yPosition += 15;
+
+    // AYT Ders Bazında Performans - kompakt
+    doc.fontSize(14)
+       .fillColor(colors.orange)
+       .font('Helvetica-Bold')
+       .text('AYT Ders Bazinda Performans', margin, yPosition);
     
+    yPosition += 20;
+
+    doc.rect(margin, yPosition, contentWidth, 35)
+       .stroke(colors.orange)
+       .strokeOpacity(0.3);
+    
+    doc.fontSize(12)
+       .fillColor(colors.orange)
+       .font('Helvetica-Bold')
+       .text('Kimya', margin + 10, yPosition + 8);
+    
+    doc.fontSize(10)
+       .fillColor('#374151')
+       .font('Helvetica')
+       .text('Dogru: 25', margin + 10, yPosition + 22)
+       .text('Yanlis: 3', margin + 100, yPosition + 22)
+       .text('Net: 24.25', margin + 180, yPosition + 22);
+
+    yPosition += 50;
+
+    // Tamamlanan Görevler - basit
+    doc.fontSize(14)
+       .fillColor(colors.green)
+       .font('Helvetica-Bold')  
+       .text('Tamamlanan Gorevler', margin, yPosition);
+    
+    yPosition += 20;
+
+    doc.rect(margin, yPosition, contentWidth, 20).fill(colors.green);
+    doc.fontSize(9)
+       .fillColor('#FFFFFF')
+       .font('Helvetica-Bold')
+       .text('Gorev', margin + 5, yPosition + 6)
+       .text('Kategori', margin + 150, yPosition + 6)
+       .text('Tarih', margin + 250, yPosition + 6);
+
+    yPosition += 20;
+
+    doc.rect(margin, yPosition, contentWidth, 18).fill('#F9FAFB');
+    doc.fontSize(8)
+       .fillColor('#374151')
+       .font('Helvetica')
+       .text('10 saat calisma', margin + 5, yPosition + 5)
+       .text('genel', margin + 150, yPosition + 5)
+       .text('27.09.2025', margin + 250, yPosition + 5);
+
     yPosition += 30;
 
-    // En Çok Yanlış Yapılan Konular
-    doc.fontSize(16)
-       .fillColor(colors.danger)
+    // En Çok Yanlış Yapılan Konular - basit
+    doc.fontSize(14)
+       .fillColor(colors.red)
        .font('Helvetica-Bold')
-       .text('⚠️ En Çok Yanlış Yapılan Konular', margin, yPosition);
+       .text('En Cok Yanlis Yapilan Konular', margin, yPosition);
     
-    yPosition += 30;
+    yPosition += 20;
 
     const wrongTopics = [
-      { grade: 'B', topic: 'Yanlış Sayısı: 6', difficulty: 'Çözülse: Yüksek', color: colors.danger },
-      { grade: 'A', topic: 'Yanlış Sayısı: 2', difficulty: 'Çözülse: Düşük', color: colors.success },
-      { grade: 'Bbb', topic: 'Yanlış Sayısı: 2', difficulty: 'Çözülse: Düşük', color: colors.success }
+      ['B', 'Yanlis Sayisi: 6', 'Cozulse: Yuksek'],
+      ['A', 'Yanlis Sayisi: 2', 'Cozulse: Dusuk'],
+      ['Bbb', 'Yanlis Sayisi: 2', 'Cozulse: Dusuk']
     ];
 
-    wrongTopics.forEach(topic => {
-      doc.rect(margin, yPosition, contentWidth, 40)
-         .fillOpacity(0.1)
-         .fill(topic.color);
-         
-      doc.rect(margin, yPosition, contentWidth, 40)
-         .strokeOpacity(1)
-         .stroke(topic.color);
+    wrongTopics.forEach((topic, index) => {
+      const color = index === 0 ? colors.red : colors.green;
+      doc.rect(margin, yPosition, contentWidth, 25)
+         .stroke(color)
+         .strokeOpacity(0.3);
       
-      doc.fontSize(14)
-         .fillColor(topic.color)
+      doc.fontSize(11)
+         .fillColor(color)
          .font('Helvetica-Bold')
-         .text(topic.grade, margin + 15, yPosition + 8);
-      
-      doc.fontSize(10)
-         .fillColor(colors.darkGray)
-         .font('Helvetica')
-         .text(topic.topic, margin + 15, yPosition + 24)
-         .text(topic.difficulty, margin + 200, yPosition + 24);
-
-      yPosition += 45;
-    });
-
-    // İstatistik Özeti - Alt bölüm
-    yPosition += 20;
-    doc.fontSize(16)
-       .fillColor(colors.info)
-       .font('Helvetica-Bold')
-       .text('📊 İstatistik Özeti', margin, yPosition);
-    
-    yPosition += 30;
-
-    // Büyük istatistik kartları - yatay
-    const statCards = [
-      { value: '52', label: 'Toplam Çözülen Soru', color: colors.primary },
-      { value: '43', label: 'Toplam Doğru', color: colors.success },  
-      { value: '9', label: 'Toplam Yanlış', color: colors.danger },
-      { value: '82.7%', label: 'Başarı Oranı', color: colors.warning }
-    ];
-
-    const statCardWidth = (contentWidth - 30) / 4;
-    xPos = margin;
-
-    statCards.forEach(card => {
-      doc.rect(xPos, yPosition, statCardWidth, 60)
-         .fill(card.color);
-      
-      doc.fontSize(18)
-         .fillColor('#FFFFFF')
-         .font('Helvetica-Bold')
-         .text(card.value, xPos + 10, yPosition + 10, { width: statCardWidth - 20, align: 'center' });
+         .text(topic[0], margin + 10, yPosition + 6);
       
       doc.fontSize(9)
-         .fillColor('#FFFFFF')
+         .fillColor('#374151')
          .font('Helvetica')
-         .text(card.label, xPos + 10, yPosition + 35, { width: statCardWidth - 20, align: 'center' });
+         .text(topic[1], margin + 10, yPosition + 16)
+         .text(topic[2], margin + 150, yPosition + 16);
 
-      xPos += statCardWidth + 10;
+      yPosition += 25;
     });
 
-    // Alt bilgi - modern footer
+    // Alt bilgi - basit
     doc.fontSize(8)
        .fillColor('#9CA3AF')
        .text(
-         '🚀 Bu rapor Berat Çakıroğlu Sınav Takip Uygulaması tarafından otomatik olarak oluşturulmuştur.',
+         'Bu rapor Berat Cakiroglu Sinav Takip Uygulamasi tarafindan otomatik olarak olusturulmustur.',
          margin,
-         pageHeight - 60,
+         pageHeight - 50,
          { align: 'center', width: contentWidth }
        );
        
     doc.fontSize(8)
-       .fillColor('#A855F7')
-       .font('Helvetica-Bold')
+       .fillColor(colors.purple)
        .text(
-         `Rapor ${currentDate} 14:10 tarihinde gönderilmiştir.`,
+         `Rapor ${currentDate} 14:10 tarihinde gonderilmistir.`,
          margin,
-         pageHeight - 45,
+         pageHeight - 35,
          { align: 'center', width: contentWidth }
        );
        
     doc.fontSize(8)
-       .fillColor('#8B5CF6')
+       .fillColor(colors.purple)
        .text(
-         '💜 Ata\'m izindeyim 💜',
+         'Ata\'m izindeyim',
          margin,
-         pageHeight - 30,
+         pageHeight - 20,
          { align: 'center', width: contentWidth }
        );
   };
 
-  // PDF Report Email Endpoint - Enhanced implementation
+  // PDF Report Email Endpoint - Enhanced implementation with validation
   app.post("/api/send-report", async (req, res) => {
     try {
       const { email, phone, reportData } = req.body;
       
       if (!email || !reportData) {
         return res.status(400).json({ message: "Email ve rapor verisi gerekli" });
+      }
+
+      // Email format validation
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Geçerli bir email adresi giriniz" });
+      }
+
+      // Test email addresses'i engelle
+      const testDomains = ['example.com', 'test.com', 'fake.com', 'dummy.com'];
+      const emailDomain = email.split('@')[1].toLowerCase();
+      if (testDomains.includes(emailDomain)) {
+        return res.status(400).json({ message: "Lütfen gerçek bir email adresi kullanın" });
       }
 
       // PDF oluştur - PDFKit kullanarak
@@ -1976,8 +1880,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // E-postayı gönder
       if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        await transporter.sendMail(mailOptions);
-        res.json({ message: "Rapor başarıyla e-posta adresinize gönderildi!" });
+        try {
+          const info = await transporter.sendMail(mailOptions);
+          console.log('Email sent successfully:', info.messageId);
+          res.json({ message: "Rapor başarıyla e-posta adresinize gönderildi!" });
+        } catch (emailError) {
+          console.error('Email sending failed:', emailError);
+          
+          // Email hatasının türüne göre farklı mesajlar
+          if (emailError.code === 'ENOTFOUND' || emailError.code === 'ECONNECTION') {
+            res.status(500).json({ message: "Email servisi ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin." });
+          } else if (emailError.responseCode === 550) {
+            res.status(400).json({ message: "Email adresi bulunamadı veya geçersiz. Lütfen doğru email adresini kontrol edin." });
+          } else if (emailError.responseCode === 535) {
+            res.status(500).json({ message: "Email kimlik doğrulama hatası. Sistem yöneticisine başvurun." });
+          } else {
+            res.status(500).json({ message: `Email gönderiminde hata: ${emailError.message}` });
+          }
+        }
       } else {
         // E-posta kimlik bilgileri yoksa sadece PDF oluştur ve başarı mesajı döndür
         res.json({ message: "PDF raporu oluşturuldu! (E-posta ayarları yapılandırılmamış)" });
