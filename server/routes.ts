@@ -2050,7 +2050,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         port: 587,
         secure: false,
         auth: {
-          user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+        user: process.env.EMAIL_USER || process.env.GMAIL_USER,
           pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS,
         },
         tls: {
