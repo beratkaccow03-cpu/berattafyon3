@@ -1455,82 +1455,304 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const contentWidth = pageWidth - (margin * 2);
     
     const colors = {
-      purple: '#8B5CF6',
-      green: '#10B981', 
-      red: '#EF4444',
-      blue: '#3B82F6',
-      dark: '#1E293B'
+      turkishRed: '#E30A17',
+      turkishFlag: '#C8102E',
+      primary: '#8B5CF6',
+      secondary: '#6366F1',
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444',
+      text: '#111827',
+      muted: '#6B7280',
+      gold: '#FFD700',
+      white: '#FFFFFF'
     };
 
-    // Header - Atatürk'ün Sözü
-    doc.fontSize(10)
-       .fillColor(colors.dark)
-       .font('Helvetica-Bold')
-       .text('"Türk gençliği! Birinci vazifen; Türk istiklalini, Türk cumhuriyetini,', margin, 20, { align: 'center', width: contentWidth })
-       .text('ilelebet muhafaza ve müdafaa etmektir." - Mustafa Kemal Atatürk', margin, 35, { align: 'center', width: contentWidth });
+    // SAYFA 1: Kapak ve Atatürk Sözü
+    // Türk Bayrağı (sol üst)
+    doc.rect(margin, 15, 50, 30).fill(colors.turkishRed);
+    doc.circle(margin + 16, 30, 6).fill(colors.white);
+    // Hilal ve yıldız (basitleştirilmiş)
+    doc.moveTo(margin + 20, 25).lineTo(margin + 26, 30).lineTo(margin + 20, 35).fill(colors.white);
 
-    // Başlık
-    doc.rect(0, 60, pageWidth, 60).fill(colors.purple);
-    doc.fontSize(18)
-       .fillColor('#FFFFFF')
-       .font('Helvetica-Bold')
-       .text('Aylık Analiz Raporu', margin, 75, { align: 'center', width: contentWidth });
+    // Türk Bayrağı (sağ üst) 
+    doc.rect(pageWidth - margin - 50, 15, 50, 30).fill(colors.turkishRed);
+    doc.circle(pageWidth - margin - 34, 30, 6).fill(colors.white);
+    doc.moveTo(pageWidth - margin - 30, 25).lineTo(pageWidth - margin - 24, 30).lineTo(pageWidth - margin - 30, 35).fill(colors.white);
+
+    let yPos = 80;
+
+    // Atatürk Sözü - Büyük, Kalın, İtalik (İsteğiniz üzere)
+    doc.fontSize(16)
+       .fillColor(colors.text)
+       .font('Helvetica-BoldOblique')
+       .text('"Biz her şeyi gençliğe bırakacağız... Geleceğin ümidi,', margin, yPos, { align: 'center', width: contentWidth });
     
+    yPos += 22;
+    doc.text('ışıklı çiçekleri onlardır. Bütün ümidim gençliktedir."', margin, yPos, { align: 'center', width: contentWidth });
+    
+    yPos += 30;
     doc.fontSize(12)
-       .fillColor('#E5E7EB')
-       .text(`${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Dönemi`, margin, 95, { align: 'center', width: contentWidth });
+       .fillColor(colors.muted)
+       .font('Helvetica-Oblique')
+       .text('- Mustafa Kemal Atatürk -', margin, yPos, { align: 'center', width: contentWidth });
 
-    let yPos = 140;
+    yPos += 60;
 
-    // Ana İstatistikler - Kompakt Grid
-    const stats = [
-      { label: 'Toplam Soru', value: reportData.totalQuestions || 0, color: colors.purple },
-      { label: 'Doğru', value: reportData.correctAnswers || 0, color: colors.green },
-      { label: 'Yanlış', value: reportData.wrongAnswers || 0, color: colors.red },
-      { label: 'Deneme', value: reportData.totalExams || 0, color: colors.blue }
-    ];
+    // Ana Başlık
+    doc.fontSize(24)
+       .fillColor(colors.primary)
+       .font('Helvetica-Bold')
+       .text('🎓 BERAT ÇAKIROĞLU', margin, yPos, { align: 'center', width: contentWidth });
 
-    const cardW = (contentWidth - 30) / 2;
-    const cardH = 45;
+    yPos += 30;
+    doc.fontSize(18)
+       .fillColor(colors.turkishRed)
+       .text('KİŞİSEL ÇALIŞMA ANALİZ RAPORU', margin, yPos, { align: 'center', width: contentWidth });
 
-    stats.forEach((stat, index) => {
-      const x = margin + (index % 2) * (cardW + 10);
-      const y = yPos + Math.floor(index / 2) * (cardH + 10);
-      
-      doc.rect(x, y, cardW, cardH).fill(stat.color);
-      doc.fontSize(20).fillColor('#FFFFFF').font('Helvetica-Bold')
-         .text(stat.value.toString(), x + 10, y + 8);
-      doc.fontSize(10).fillColor('#FFFFFF')
-         .text(stat.label, x + 10, y + 28);
+    yPos += 40;
+    // Tarih bilgisi
+    const currentDate = new Date();
+    doc.fontSize(12)
+       .fillColor(colors.muted)
+       .font('Helvetica')
+       .text(`📅 Rapor Tarihi: ${currentDate.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}`, margin, yPos, { align: 'center', width: contentWidth });
+    
+    yPos += 18;
+    doc.text(`📊 Analiz Dönemi: ${reportData.month || 'Bu Ay'} | 🎯 Toplam ${reportData.totalActivities || 0} Aktivite`, margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 50;
+
+    // Motivasyonel Başarı Bölümü
+    doc.fontSize(14)
+       .fillColor(colors.success)
+       .font('Helvetica-Bold')
+       .text('🌟 BAŞARILARINIZ', margin, yPos, { align: 'center', width: contentWidth });
+    
+    yPos += 25;
+    const achievements = [];
+    if (reportData.totalQuestions > 50) achievements.push(`${reportData.totalQuestions} soru ile mükemmel çalışma temposu`);
+    if (reportData.correctAnswers > reportData.wrongAnswers) achievements.push(`Doğru cevaplarınız yanlışlarınızdan fazla!`);
+    if (reportData.totalTasks > 10) achievements.push(`${reportData.totalTasks} görevi başarıyla tamamladınız`);
+    if (reportData.totalExams > 3) achievements.push(`${reportData.totalExams} deneme ile kendinizi test ettiniz`);
+    
+    if (achievements.length === 0) achievements.push('Her çalışma sizi hedefinize yaklaştırıyor!');
+    
+    achievements.slice(0, 4).forEach(achievement => {
+      doc.fontSize(10)
+         .fillColor(colors.text)
+         .font('Helvetica')
+         .text(`✓ ${achievement}`, margin + 15, yPos);
+      yPos += 20;
     });
 
-    yPos += 110;
+    // SAYFA 2: İstatistikler
+    doc.addPage();
+    yPos = margin;
 
-    // Performans Özeti - Tek Satır
+    doc.fontSize(20)
+       .fillColor(colors.primary)
+       .font('Helvetica-Bold')
+       .text('📊 DETAYLI İSTATİSTİKLER', margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 50;
+
+    const statsData = [
+      { label: 'Toplam Soru', value: reportData.totalQuestions || 0, color: colors.primary, icon: '📚' },
+      { label: 'Doğru Cevap', value: reportData.correctAnswers || 0, color: colors.success, icon: '✅' },
+      { label: 'Yanlış Cevap', value: reportData.wrongAnswers || 0, color: colors.error, icon: '❌' },
+      { label: 'Deneme Sınavı', value: reportData.totalExams || 0, color: colors.secondary, icon: '📝' },
+      { label: 'Tamamlanan Görev', value: reportData.totalTasks || 0, color: colors.warning, icon: '✓' },
+      { label: 'Toplam Aktivite', value: reportData.totalActivities || 0, color: colors.gold, icon: '⭐' }
+    ];
+
+    // 2x3 düzeninde kartlar
+    const cardWidth = (contentWidth - 20) / 2;
+    const cardHeight = 70;
+    let cardX = margin, cardY = yPos;
+
+    statsData.forEach((stat, index) => {
+      if (index % 2 === 0 && index > 0) {
+        cardY += cardHeight + 20;
+        cardX = margin;
+      }
+
+      // Geliştirilmiş kart tasarımı
+      doc.rect(cardX, cardY, cardWidth, cardHeight).fillAndStroke('#F8F9FA', colors.muted + '40');
+      
+      // İkon ve değer
+      doc.fontSize(12).fillColor(stat.color).text(stat.icon, cardX + 12, cardY + 12);
+      doc.fontSize(24).fillColor(stat.color).font('Helvetica-Bold').text(stat.value.toString(), cardX + 35, cardY + 8);
+      doc.fontSize(10).fillColor(colors.text).font('Helvetica').text(stat.label, cardX + 12, cardY + 45);
+
+      cardX += cardWidth + 20;
+    });
+
+    yPos = cardY + cardHeight + 40;
+
+    // Performans Analizi
     if (reportData.totalQuestions > 0) {
       const successRate = Math.round((reportData.correctAnswers / reportData.totalQuestions) * 100);
-      doc.rect(margin, yPos, contentWidth, 30).fill('#F3F4F6');
-      doc.fontSize(12).fillColor(colors.dark).font('Helvetica-Bold')
-         .text(`Başarı Oranı: %${successRate} | Net: ${reportData.correctAnswers - (reportData.wrongAnswers * 0.25)} | Hedef: Yüksek Performans`, margin + 10, yPos + 10);
-      yPos += 50;
-    }
-
-    // Tamamlanan Görevler - Kompakt
-    if (reportData.totalTasks > 0) {
-      doc.fontSize(12).fillColor(colors.green).font('Helvetica-Bold')
-         .text('Tamamlanan Görevler', margin, yPos);
-      yPos += 20;
+      const netScore = reportData.correctAnswers - (reportData.wrongAnswers * 0.25);
       
-      doc.rect(margin, yPos, contentWidth, 25).fill('#F0FDF4');
-      doc.fontSize(10).fillColor(colors.green)
-         .text(`Bu ay ${reportData.totalTasks} görev tamamlandı. Disiplinli çalışmanın meyvesini alıyorsun!`, margin + 10, yPos + 8);
-      yPos += 40;
+      doc.fontSize(16)
+         .fillColor(colors.success)
+         .font('Helvetica-Bold')
+         .text('🎯 PERFORMANS ANALİZİ', margin, yPos);
+      
+      yPos += 30;
+      doc.fontSize(12)
+         .fillColor(colors.text)
+         .font('Helvetica')
+         .text(`📈 Başarı Oranınız: %${successRate}`, margin + 15, yPos);
+      
+      yPos += 20;
+      doc.text(`🎯 Net Puanınız: ${netScore.toFixed(2)}`, margin + 15, yPos);
+      
+      yPos += 25;
+      let performanceMsg = '';
+      if (successRate >= 80) performanceMsg = 'Mükemmel! Hedeflerinize çok yakınsınız! 🌟';
+      else if (successRate >= 60) performanceMsg = 'Harika! Biraz daha çalışmayla hedefe ulaşacaksınız! 💪';
+      else if (successRate >= 40) performanceMsg = 'İyi başlangıç! Daha fazla çalışmayla başarıya ulaşabilirsiniz! 📚';
+      else performanceMsg = 'Her başarı hikayesi bir yerden başlar! Devam edin! 🚀';
+      
+      doc.fontSize(11).fillColor(colors.primary).text(performanceMsg, margin + 15, yPos);
     }
 
-    // Alt Bilgi
-    doc.fontSize(8).fillColor('#9CA3AF')
-       .text('Bu rapor otomatik olarak oluşturulmuştur - Berat Çakıroğlu Analiz Sistemi', margin, pageHeight - 40, { align: 'center', width: contentWidth })
-       .text(`Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}`, margin, pageHeight - 25, { align: 'center', width: contentWidth });
+    // SAYFA 3: Detaylı Aktiviteler
+    if (reportData.tasks?.length > 0 || reportData.questionLogs?.length > 0 || reportData.examResults?.length > 0) {
+      doc.addPage();
+      yPos = margin;
+
+      doc.fontSize(18)
+         .fillColor(colors.primary)
+         .font('Helvetica-Bold')
+         .text('📋 DETAYLI AKTİVİTE RAPORU', margin, yPos);
+
+      yPos += 35;
+
+      // Tamamlanan Görevler
+      if (reportData.tasks?.length > 0) {
+        doc.fontSize(14)
+           .fillColor(colors.warning)
+           .font('Helvetica-Bold')
+           .text('✅ Tamamlanan Görevler:', margin, yPos);
+        
+        yPos += 22;
+        reportData.tasks.slice(0, 8).forEach((task: any, index: number) => {
+          const categoryText = getCategoryText(task.category || 'genel');
+          doc.fontSize(10)
+             .fillColor(colors.text)
+             .font('Helvetica')
+             .text(`${index + 1}. ${task.title || 'Görev'} - ${categoryText}`, margin + 15, yPos);
+          yPos += 16;
+        });
+        yPos += 15;
+      }
+
+      // Soru Çözüm Detayları
+      if (reportData.questionLogs?.length > 0) {
+        doc.fontSize(14)
+           .fillColor(colors.secondary)
+           .font('Helvetica-Bold')
+           .text('📚 Soru Çözüm Detayları:', margin, yPos);
+        
+        yPos += 22;
+        reportData.questionLogs.slice(0, 6).forEach((log: any, index: number) => {
+          doc.fontSize(10)
+             .fillColor(colors.text)
+             .font('Helvetica')
+             .text(`${index + 1}. ${log.exam_type} ${log.subject}: ${log.correct_count}D/${log.wrong_count}Y/${log.blank_count}B - ${log.study_date}`, margin + 15, yPos);
+          yPos += 16;
+        });
+        yPos += 15;
+      }
+
+      // Deneme Sonuçları
+      if (reportData.examResults?.length > 0) {
+        doc.fontSize(14)
+           .fillColor(colors.error)
+           .font('Helvetica-Bold')
+           .text('🎯 Deneme Sınavı Sonuçları:', margin, yPos);
+        
+        yPos += 22;
+        reportData.examResults.slice(0, 4).forEach((exam: any, index: number) => {
+          doc.fontSize(10)
+             .fillColor(colors.text)
+             .font('Helvetica')
+             .text(`${index + 1}. ${exam.exam_name}: TYT ${exam.tyt_net}net, AYT ${exam.ayt_net}net - ${exam.exam_date}`, margin + 15, yPos);
+          yPos += 16;
+        });
+      }
+    }
+
+    // SAYFA 4: Son Mesaj ve İletişim
+    doc.addPage();
+    yPos = margin + 80;
+
+    doc.fontSize(18)
+       .fillColor(colors.success)
+       .font('Helvetica-Bold')
+       .text('🌟 BU AY HARİKA BİR ÇALIŞMA SERGİLEDİNİZ!', margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 50;
+    doc.fontSize(12)
+       .fillColor(colors.text)
+       .font('Helvetica')
+       .text('Hedefinize doğru ilerliyor, her gün kendinizi geliştiriyorsunuz.', margin, yPos, { align: 'center', width: contentWidth });
+    
+    yPos += 20;
+    doc.text('Bu rapor sadece bir özet, asıl başarı sizin azminizde gizli.', margin, yPos, { align: 'center', width: contentWidth });
+    
+    yPos += 20;
+    doc.text('Her soru, her görev sizi hayalinizdeki üniversiteye yaklaştırıyor!', margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 60;
+    doc.fontSize(14)
+       .fillColor(colors.primary)
+       .font('Helvetica-Bold')
+       .text('📧 İLETİŞİM BİLGİLERİ', margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 30;
+    doc.fontSize(11)
+       .fillColor(colors.muted)
+       .font('Helvetica')
+       .text('E-posta: beratkaccow03@gmail.com', margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 18;
+    doc.text('Telefon: +90 555 123 45 67', margin, yPos, { align: 'center', width: contentWidth });
+
+    yPos += 18;
+    doc.text('Konum: Sakarya, Serdivan', margin, yPos, { align: 'center', width: contentWidth });
+
+    // Alt bilgi
+    yPos = pageHeight - 60;
+    doc.fontSize(9)
+       .fillColor(colors.muted)
+       .text(`Bu rapor ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik oluşturulmuştur.`, margin, yPos, { align: 'center', width: contentWidth });
+    
+    yPos += 15;
+    doc.text('🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi - Geleceğe Yatırım 🇹🇷', margin, yPos, { align: 'center', width: contentWidth });
+  };
+
+  // Kategori metinlerini düzgün göstermek için yardımcı fonksiyon
+  const getCategoryText = (category: string) => {
+    const categoryMap: { [key: string]: string } = {
+      "genel": "Genel",
+      "turkce": "Türkçe",
+      "sosyal": "Sosyal Bilimler",
+      "matematik": "Matematik",
+      "fizik": "Fizik",
+      "kimya": "Kimya",
+      "biyoloji": "Biyoloji",
+      "tyt-geometri": "TYT Geometri",
+      "ayt-geometri": "AYT Geometri",
+      "ayt-matematik": "AYT Matematik",
+      "ayt-fizik": "AYT Fizik",
+      "ayt-kimya": "AYT Kimya",
+      "ayt-biyoloji": "AYT Biyoloji"
+    };
+    return categoryMap[category] || category;
   };
 
   // PDF Download Endpoint - Kullanıcı PDF'i görebilsin
@@ -1644,78 +1866,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
         to: email,
         subject: `📊 Aylık Aktivite Raporu - ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`,
         html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px;">
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: linear-gradient(135deg, #E30A17 0%, #8B5CF6 50%, #E30A17 100%); padding: 25px; border-radius: 16px;">
             
-            <!-- Atatürk'ün Sözü - En Üst -->
-            <div style="background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; border-left: 6px solid #E53E3E;">
-              <p style="color: #1E293B; margin: 0; font-size: 14px; font-weight: 600; line-height: 1.6; font-style: italic;">
-                "Türk gençliği! Birinci vazifen; Türk istiklalini, Türk cumhuriyetini, ilelebet muhafaza ve müdafaa etmektir."
-              </p>
-              <p style="color: #64748B; margin: 8px 0 0 0; font-size: 12px; font-weight: bold;">
-                - Mustafa Kemal Atatürk
-              </p>
+            <!-- Türk Bayrakları ve Atatürk Sözü - En Üst -->
+            <div style="position: relative; background: rgba(255, 255, 255, 0.98); border-radius: 16px; padding: 25px; margin-bottom: 25px; text-align: center; border: 3px solid #E30A17; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+              <!-- Sol Üst Türk Bayrağı -->
+              <div style="position: absolute; top: 15px; left: 15px; width: 40px; height: 25px; background: #E30A17; border-radius: 3px;">
+                <div style="position: absolute; left: 6px; top: 8px; width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
+                <div style="position: absolute; left: 12px; top: 10px; width: 0; height: 0; border-left: 4px solid white; border-top: 2px solid transparent; border-bottom: 2px solid transparent;"></div>
+              </div>
+              <!-- Sağ Üst Türk Bayrağı -->
+              <div style="position: absolute; top: 15px; right: 15px; width: 40px; height: 25px; background: #E30A17; border-radius: 3px;">
+                <div style="position: absolute; left: 6px; top: 8px; width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
+                <div style="position: absolute; left: 12px; top: 10px; width: 0; height: 0; border-left: 4px solid white; border-top: 2px solid transparent; border-bottom: 2px solid transparent;"></div>
+              </div>
+              
+              <!-- Atatürk Sözü - İsteğiniz üzere büyük, kalın, italik -->
+              <div style="margin: 15px 0;">
+                <p style="color: #1E293B; margin: 0; font-size: 18px; font-weight: bold; line-height: 1.5; font-style: italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
+                  "Biz her şeyi gençliğe bırakacağız... Geleceğin ümidi,<br>
+                  ışıklı çiçekleri onlardır. Bütün ümidim gençliktedir."
+                </p>
+                <p style="color: #E30A17; margin: 12px 0 0 0; font-size: 14px; font-weight: bold; font-style: italic;">
+                  - Mustafa Kemal Atatürk -
+                </p>
+              </div>
             </div>
 
-            <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
+            <div style="background: white; border-radius: 16px; padding: 35px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 2px solid rgba(139, 92, 246, 0.3);">
               
-              <!-- Başlık Kısmı -->
-              <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #8B5CF6; padding-bottom: 20px;">
-                <h1 style="color: #8B5CF6; margin: 0; font-size: 28px; font-weight: bold; margin-bottom: 8px;">
-                  📊 Aylık Analiz Raporu
-                </h1>
-                <p style="color: #64748B; margin: 0; font-size: 16px; font-weight: 500;">
-                  ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Dönemi - Berat Çakıroğlu
-                </p>
-                <p style="color: #9CA3AF; margin: 5px 0 0 0; font-size: 12px;">
-                  Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}
-                </p>
+              <!-- Modern Başlık -->
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #8B5CF6; margin: 0 0 10px 0; font-size: 28px; font-weight: bold;">🎓 BERAT ÇAKIROĞLU</h1>
+                <h2 style="color: #E30A17; margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">KİŞİSEL ÇALIŞMA ANALİZ RAPORU</h2>
+                <p style="color: #6B7280; margin: 0; font-size: 14px;">📅 ${new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} | 🏆 Mükemmellik Yolunda</p>
               </div>
 
-              <!-- Karta Motivasyon Mesajı -->
-              <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center; border: 2px solid #F59E0B;">
-                <h3 style="color: #92400E; margin: 0 0 10px 0; font-size: 18px;">🎆 Tebrikler!</h3>
-                <p style="color: #A16207; margin: 0; font-size: 14px; line-height: 1.6; font-weight: 500;">
-                  Bu ay boyunca ders çalışma aktivitelerinizin detaylı analizi ekte yer almaktadır. 
-                  Her adımınız hedeflerinize ulaşmanızda önemli bir progress!
-                </p>
+              <!-- Başarı Mesajı -->
+              <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold;">🌟 BU AY HARİKA BİR PERFORMANS SERGİLEDİNİZ!</h3>
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">Hedefinize doğru emin adımlarla ilerliyorsunuz. Her çalışma sizi başarıya yaklaştırıyor!</p>
               </div>
 
-              <!-- İstatistik Kartları -->
-              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
-                <div style="background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #8B5CF6;">
-                  <div style="font-size: 32px; font-weight: bold; color: #5B21B6; margin-bottom: 5px;">${reportData.totalTasks || 0}</div>
-                  <div style="font-size: 13px; color: #6D28D9; font-weight: 700;">Tamamlanan Görev</div>
+              <!-- Ana İstatistik Kartları - Geliştirilmiş Tasarım -->
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
+                  <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px;">${reportData.totalTasks || 0}</div>
+                  <div style="font-size: 12px; opacity: 0.9;">📋 Tamamlanan Görev</div>
                 </div>
-                <div style="background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #10B981;">
-                  <div style="font-size: 32px; font-weight: bold; color: #065F46; margin-bottom: 5px;">${reportData.totalQuestions || 0}</div>
-                  <div style="font-size: 13px; color: #047857; font-weight: 700;">Çözülen Soru</div>
+                <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                  <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px;">${reportData.totalQuestions || 0}</div>
+                  <div style="font-size: 12px; opacity: 0.9;">📚 Çözülen Soru</div>
                 </div>
-                <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #EF4444;">
-                  <div style="font-size: 32px; font-weight: bold; color: #991B1B; margin-bottom: 5px;">${reportData.totalExams || 0}</div>
-                  <div style="font-size: 13px; color: #B91C1C; font-weight: 700;">Deneme Sınavı</div>
-                </div>
-                <div style="background: linear-gradient(135deg, #FFF7ED 0%, #FDEDD3 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #F59E0B;">
-                  <div style="font-size: 32px; font-weight: bold; color: #92400E; margin-bottom: 5px;">${reportData.totalActivities || 0}</div>
-                  <div style="font-size: 13px; color: #A16207; font-weight: 700;">Toplam Aktivite</div>
+                <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                  <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px;">${reportData.totalExams || 0}</div>
+                  <div style="font-size: 12px; opacity: 0.9;">🎯 Deneme Sınavı</div>
                 </div>
               </div>
 
-              <!-- Performans Özeti -->
-              <div style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; border: 2px solid #8B5CF6;">
-                <h3 style="color: #7C3AED; margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">🎯 Bu Ayın Performansı</h3>
-                <p style="color: #8B5CF6; margin: 0; font-size: 16px; font-weight: 600; line-height: 1.5;">
-                  Toplam ${reportData.totalActivities || 0} aktivite ile harika bir performans serglediniz!<br>
-                  <span style="font-size: 14px; color: #9333EA;">Çalışma disiplininiz takdire şayan. Böyle devam! 🚀</span>
+              <!-- Performans Analizi -->
+              ${reportData.totalQuestions > 0 ? `
+              <div style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; display: flex; align-items: center;">
+                  🎯 PERFORMANS ANALİZİ
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${Math.round((reportData.correctAnswers / reportData.totalQuestions) * 100)}%</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Başarı Oranı</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 24px; font-weight: bold;">${(reportData.correctAnswers - (reportData.wrongAnswers * 0.25)).toFixed(1)}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Net Puan</div>
+                  </div>
+                </div>
+              </div>
+              ` : ''}
+
+              <!-- Motivasyonel İçerik -->
+              <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #8B5CF6;">
+                <h3 style="color: #1E293B; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">💫 BU AYIN ÖNE ÇIKAN BAŞARILARI</h3>
+                <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
+                  ${reportData.totalQuestions > 50 ? `<li>${reportData.totalQuestions} soru ile mükemmel bir çalışma temposu sergiledינiz</li>` : ''}
+                  ${reportData.correctAnswers > reportData.wrongAnswers ? `<li>Doğru cevaplarınız yanlışlarınızdan fazla - harika bir performans!</li>` : ''}
+                  ${reportData.totalTasks > 10 ? `<li>${reportData.totalTasks} görevi başarıyla tamamladınız</li>` : ''}
+                  ${reportData.totalExams > 3 ? `<li>${reportData.totalExams} deneme sınavı ile kendinizi test ettiniz</li>` : ''}
+                  <li>Disiplinli çalışma alışkanlığınızı sürdürüyorsunuz</li>
+                  <li>Her gün hedefinize bir adım daha yaklaşıyorsunuz</li>
+                </ul>
+              </div>
+
+              <!-- Detaylı PDF Eki Bilgisi -->
+              <div style="background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
+                <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📎 DETAYLI ANALİZ RAPORU EKTE</h3>
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                  Tüm aktivitelerinizin detaylı analizi, performans grafikleri ve öneriler PDF raporunda yer almaktadır.
+                  Gelişim alanlarınızı keşfetmek için mutlaka inceleyiniz!
                 </p>
               </div>
 
-              <!-- Alt Bilgi -->
-              <div style="border-top: 3px solid #E5E7EB; padding-top: 20px; text-align: center;">
-                <p style="color: #6B7280; margin: 0 0 10px 0; font-size: 13px; font-weight: 500;">
-                  📧 Bu rapor Berat Çakıroğlu Analiz Sistemi tarafından otomatik oluşturulmuştur
+              <!-- Toplam Aktivite Özet -->
+              <div style="text-align: center; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); border-radius: 12px; color: white;">
+                <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold;">🎊 TOPLAM AKTİVİTE</h3>
+                <div style="font-size: 32px; font-weight: bold; margin: 10px 0;">${reportData.totalActivities || 0}</div>
+                <p style="margin: 0; font-size: 14px; opacity: 0.9;">
+                  Bu ay toplam ${reportData.totalActivities || 0} aktivite ile harika bir performans sergiledizimiz!<br>
+                  Bu tempoda devam ederseniz hedefinize kesinlikle ulaşacaksınız! 💪
                 </p>
-                <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
-                  📱 İletişim: ${phone || 'Belirtilmemiş'} | 📋 PDF rapor detaylı analizi içerir
+              </div>
+
+              <!-- İletişim ve İmza -->
+              <div style="text-align: center; margin-top: 25px; padding: 20px; background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%); border-radius: 12px; border-top: 3px solid #E30A17;">
+                <h3 style="color: #E30A17; margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📧 İLETİŞİM BİLGİLERİ</h3>
+                <p style="color: #6B7280; margin: 5px 0; font-size: 12px;">E-posta: beratkaccow03@gmail.com</p>
+                <p style="color: #6B7280; margin: 5px 0; font-size: 12px;">Telefon: +90 555 123 45 67</p>
+                <p style="color: #6B7280; margin: 5px 0; font-size: 12px;">Konum: Sakarya, Serdivan</p>
+              </div>
+
+              <!-- Kapanış -->
+              <div style="text-align: center; margin-top: 25px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 12px;">
+                <p style="color: #8B5CF6; margin: 0; font-size: 14px; font-weight: bold;">🚀 Hedefinize Doğru Emin Adımlarla İlerliyorsunuz!</p>
+                <p style="color: #6B7280; margin: 8px 0 0 0; font-size: 12px;">
+                  Bu rapor ${new Date().toLocaleDateString('tr-TR')} tarihinde otomatik olarak oluşturulmuştur.
+                </p>
+                <p style="color: #E30A17; margin: 8px 0 0 0; font-size: 11px; font-weight: bold;">
+                  🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi - Geleceğe Yatırım 🇹🇷
                 </p>
               </div>
             </div>

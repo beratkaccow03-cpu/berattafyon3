@@ -225,23 +225,45 @@ export default function Homepage() {
         return false;
       });
 
-      const monthlyActivities = {
+      // Calculate comprehensive statistics for auto-send
+      const totalQuestions = monthlyQuestionLogs.reduce((sum: number, log: any) => 
+        sum + parseInt(log.correct_count || '0') + parseInt(log.wrong_count || '0') + parseInt(log.blank_count || '0'), 0
+      );
+      const totalCorrect = monthlyQuestionLogs.reduce((sum: number, log: any) => 
+        sum + parseInt(log.correct_count || '0'), 0
+      );
+      const totalWrong = monthlyQuestionLogs.reduce((sum: number, log: any) => 
+        sum + parseInt(log.wrong_count || '0'), 0
+      );
+
+      const comprehensiveReportData = {
+        totalTasks: monthlyTasks.length,
+        totalQuestions: totalQuestions,
+        correctAnswers: totalCorrect,
+        wrongAnswers: totalWrong,
+        totalExams: monthlyExamResults.length,
+        totalActivities: monthlyTasks.length + monthlyQuestionLogs.length + monthlyExamResults.length,
+        month: currentDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+        date: currentDate.toLocaleDateString('tr-TR'),
         tasks: monthlyTasks,
         questionLogs: monthlyQuestionLogs,
         examResults: monthlyExamResults,
-        total: monthlyTasks.length + monthlyQuestionLogs.length + monthlyExamResults.length
+        user: {
+          name: 'Berat Çakıroğlu',
+          email: 'beratkaccow03@gmail.com'
+        }
       };
 
-      const reportData = {
-        month: currentDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
-        date: currentDate.toLocaleDateString('tr-TR'),
-        activities: monthlyActivities,
-        email: 'brtbllcankir03@gmail.com'
+      // Send data in correct format for auto-send
+      const emailRequest = {
+        email: 'beratkaccow03@gmail.com',
+        phone: '+90 555 123 45 67',
+        reportData: comprehensiveReportData
       };
 
       const response = await fetch("/api/send-report", {
         method: "POST",
-        body: JSON.stringify(reportData),
+        body: JSON.stringify(emailRequest),
         headers: {
           "Content-Type": "application/json",
         },
@@ -483,21 +505,43 @@ export default function Homepage() {
       return false;
     });
 
-    const monthlyActivities = {
+    // Calculate comprehensive statistics
+    const totalQuestions = monthlyQuestionLogs.reduce((sum: number, log: any) => 
+      sum + parseInt(log.correct_count || '0') + parseInt(log.wrong_count || '0') + parseInt(log.blank_count || '0'), 0
+    );
+    const totalCorrect = monthlyQuestionLogs.reduce((sum: number, log: any) => 
+      sum + parseInt(log.correct_count || '0'), 0
+    );
+    const totalWrong = monthlyQuestionLogs.reduce((sum: number, log: any) => 
+      sum + parseInt(log.wrong_count || '0'), 0
+    );
+
+    const comprehensiveReportData = {
+      totalTasks: monthlyTasks.length,
+      totalQuestions: totalQuestions,
+      correctAnswers: totalCorrect,
+      wrongAnswers: totalWrong,
+      totalExams: monthlyExamResults.length,
+      totalActivities: monthlyTasks.length + monthlyQuestionLogs.length + monthlyExamResults.length,
+      month: currentDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
+      date: currentDate.toLocaleDateString('tr-TR'),
       tasks: monthlyTasks,
       questionLogs: monthlyQuestionLogs,
       examResults: monthlyExamResults,
-      total: monthlyTasks.length + monthlyQuestionLogs.length + monthlyExamResults.length
+      user: {
+        name: 'Berat Çakıroğlu',
+        email: 'beratkaccow03@gmail.com'
+      }
     };
 
-    const reportData = {
-      month: currentDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' }),
-      date: currentDate.toLocaleDateString('tr-TR'),
-      activities: monthlyActivities,
-      email: 'brtbllcankir03@gmail.com'
+    // Send data in format expected by backend: { email, phone, reportData }
+    const emailRequest = {
+      email: 'beratkaccow03@gmail.com',
+      phone: '+90 555 123 45 67', // Optional phone number
+      reportData: comprehensiveReportData
     };
 
-    sendEmailMutation.mutate(reportData);
+    sendEmailMutation.mutate(emailRequest);
   };
 
   return (
