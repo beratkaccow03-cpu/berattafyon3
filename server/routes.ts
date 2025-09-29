@@ -1623,14 +1623,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // E-posta gönderimi
       
-      // SMTP konfigürasyonu
+      // Gmail SMTP konfigürasyonu - İyileştirilmiş
       const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.EMAIL_PORT || '587'),
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
         secure: false,
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
+          user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+          pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS
+        },
+        tls: {
+          rejectUnauthorized: false
         }
       });
 
@@ -1754,6 +1758,247 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('PDF/Email error:', error);
       res.status(500).json({ message: "Rapor gönderilirken hata oluştu: " + error.message });
+    }
+  });
+
+  // Test e-posta gönderimi - Farklı senaryolar için test endpoint'i
+  app.post("/api/test-emails", async (req, res) => {
+    try {
+      const { email, testType } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email gerekli" });
+      }
+
+      // Email format validation
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Geçerli bir email adresi giriniz" });
+      }
+
+      // Test senaryoları için farklı veri setleri
+      const testScenarios = {
+        soru_eklendi: {
+          subject: "🎯 Yeni Sorular Eklendi - Test",
+          reportData: {
+            totalQuestions: 25,
+            correctAnswers: 20,
+            wrongAnswers: 5,
+            totalExams: 1,
+            totalTasks: 3,
+            totalActivities: 7
+          }
+        },
+        deneme_tamamlandi: {
+          subject: "📝 Deneme Sınavı Tamamlandı - Test",
+          reportData: {
+            totalQuestions: 120,
+            correctAnswers: 85,
+            wrongAnswers: 35,
+            totalExams: 5,
+            totalTasks: 8,
+            totalActivities: 15
+          }
+        },
+        hatali_konular: {
+          subject: "⚠️ Hatalı Konular Analizi - Test",
+          reportData: {
+            totalQuestions: 50,
+            correctAnswers: 30,
+            wrongAnswers: 20,
+            totalExams: 2,
+            totalTasks: 5,
+            totalActivities: 9
+          }
+        },
+        gorev_eklendi: {
+          subject: "✅ Yeni Görevler Eklendi - Test",
+          reportData: {
+            totalQuestions: 15,
+            correctAnswers: 12,
+            wrongAnswers: 3,
+            totalExams: 1,
+            totalTasks: 12,
+            totalActivities: 20
+          }
+        },
+        gorev_tamamlandi: {
+          subject: "🎉 Görevler Tamamlandı - Test",
+          reportData: {
+            totalQuestions: 40,
+            correctAnswers: 35,
+            wrongAnswers: 5,
+            totalExams: 3,
+            totalTasks: 15,
+            totalActivities: 25
+          }
+        },
+        aylik_ozet: {
+          subject: "📊 Aylık Özet Raporu - Test",
+          reportData: {
+            totalQuestions: 200,
+            correctAnswers: 160,
+            wrongAnswers: 40,
+            totalExams: 8,
+            totalTasks: 25,
+            totalActivities: 50
+          }
+        }
+      };
+
+      const scenario = testScenarios[testType] || testScenarios.aylik_ozet;
+      
+      // PDF oluştur
+      const doc = new PDFKit({
+        size: 'A4',
+        margin: 40,
+        bufferPages: true
+      });
+
+      const buffers = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        
+        // Gmail SMTP konfigürasyonu
+        const transporter = nodemailer.createTransporter({
+          service: 'gmail',
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+            pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+
+        // Test e-posta ayarları
+        const mailOptions = {
+          from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+          to: email,
+          subject: scenario.subject,
+          html: `
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 16px;">
+              
+              <!-- Atatürk'ün Sözü - En Üst -->
+              <div style="background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center; border-left: 6px solid #E53E3E;">
+                <p style="color: #1E293B; margin: 0; font-size: 14px; font-weight: 600; line-height: 1.6; font-style: italic;">
+                  "Türk gençliği! Birinci vazifen; Türk istiklalini, Türk cumhuriyetini, ilelebet muhafaza ve müdafaa etmektir."
+                </p>
+                <p style="color: #64748B; margin: 8px 0 0 0; font-size: 12px; font-weight: bold;">
+                  - Mustafa Kemal Atatürk
+                </p>
+              </div>
+
+              <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);">
+                
+                <!-- Test Mesajı -->
+                <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center; border: 2px solid #EF4444;">
+                  <h3 style="color: #991B1B; margin: 0 0 10px 0; font-size: 18px;">🧪 TEST E-POSTASI</h3>
+                  <p style="color: #B91C1C; margin: 0; font-size: 14px; line-height: 1.6; font-weight: 500;">
+                    Bu bir test e-postasıdır. Test türü: <strong>${testType || 'aylik_ozet'}</strong><br>
+                    ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')} tarihinde gönderildi.
+                  </p>
+                </div>
+                
+                <!-- Başlık Kısmı -->
+                <div style="text-align: center; margin-bottom: 30px; border-bottom: 3px solid #8B5CF6; padding-bottom: 20px;">
+                  <h1 style="color: #8B5CF6; margin: 0; font-size: 28px; font-weight: bold; margin-bottom: 8px;">
+                    📊 Test Raporu
+                  </h1>
+                  <p style="color: #64748B; margin: 0; font-size: 16px; font-weight: 500;">
+                    ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Dönemi - Berat Çakıroğlu
+                  </p>
+                  <p style="color: #9CA3AF; margin: 5px 0 0 0; font-size: 12px;">
+                    Test Rapor Tarihi: ${new Date().toLocaleDateString('tr-TR')} ${new Date().toLocaleTimeString('tr-TR')}
+                  </p>
+                </div>
+
+                <!-- İstatistik Kartları -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
+                  <div style="background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #8B5CF6;">
+                    <div style="font-size: 32px; font-weight: bold; color: #5B21B6; margin-bottom: 5px;">${scenario.reportData.totalTasks}</div>
+                    <div style="font-size: 13px; color: #6D28D9; font-weight: 700;">Test Görevler</div>
+                  </div>
+                  <div style="background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #10B981;">
+                    <div style="font-size: 32px; font-weight: bold; color: #065F46; margin-bottom: 5px;">${scenario.reportData.totalQuestions}</div>
+                    <div style="font-size: 13px; color: #047857; font-weight: 700;">Test Sorular</div>
+                  </div>
+                  <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #EF4444;">
+                    <div style="font-size: 32px; font-weight: bold; color: #991B1B; margin-bottom: 5px;">${scenario.reportData.totalExams}</div>
+                    <div style="font-size: 13px; color: #B91C1C; font-weight: 700;">Test Denemeler</div>
+                  </div>
+                  <div style="background: linear-gradient(135deg, #FFF7ED 0%, #FDEDD3 100%); padding: 18px; border-radius: 10px; text-align: center; border: 2px solid #F59E0B;">
+                    <div style="font-size: 32px; font-weight: bold; color: #92400E; margin-bottom: 5px;">${scenario.reportData.totalActivities}</div>
+                    <div style="font-size: 13px; color: #A16207; font-weight: 700;">Test Aktiviteler</div>
+                  </div>
+                </div>
+
+                <!-- Test Bilgisi -->
+                <div style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; border: 2px solid #8B5CF6;">
+                  <h3 style="color: #7C3AED; margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">🎯 Test Başarılı!</h3>
+                  <p style="color: #8B5CF6; margin: 0; font-size: 16px; font-weight: 600; line-height: 1.5;">
+                    E-posta sistemi çalışıyor! Test verileri ile ${scenario.reportData.totalActivities} aktivite simüle edildi.<br>
+                    <span style="font-size: 14px; color: #9333EA;">Gmail SMTP entegrasyonu başarılı! 🚀</span>
+                  </p>
+                </div>
+
+                <!-- Alt Bilgi -->
+                <div style="border-top: 3px solid #E5E7EB; padding-top: 20px; text-align: center;">
+                  <p style="color: #6B7280; margin: 0 0 10px 0; font-size: 13px; font-weight: 500;">
+                    📧 Bu test e-postası Berat Çakıroğlu Analiz Sistemi tarafından gönderildi
+                  </p>
+                  <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
+                    📱 Test türü: ${testType || 'aylik_ozet'} | 📋 PDF test raporu ekte
+                  </p>
+                </div>
+              </div>
+            </div>
+          `,
+          attachments: [{
+            filename: `test-raporu-${testType || 'aylik_ozet'}-${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }]
+        };
+
+        // E-postayı gönder
+        if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+          transporter.sendMail(mailOptions)
+            .then(() => {
+              res.json({ 
+                message: `Test e-postası başarıyla gönderildi! Test türü: ${testType || 'aylik_ozet'}`,
+                testType: testType || 'aylik_ozet',
+                emailSent: true
+              });
+            })
+            .catch((emailError) => {
+              console.error('Test email gönderim hatası:', emailError);
+              res.status(500).json({ 
+                message: `Test e-posta gönderiminde hata: ${emailError.message}`,
+                testType: testType || 'aylik_ozet',
+                emailSent: false
+              });
+            });
+        } else {
+          res.json({ 
+            message: "E-posta kimlik bilgileri yapılandırılmamış - Test PDF oluşturuldu",
+            testType: testType || 'aylik_ozet',
+            emailSent: false
+          });
+        }
+      });
+
+      // PDF içeriği oluştur
+      generatePDFContent(doc, scenario.reportData);
+      doc.end();
+      
+    } catch (error) {
+      console.error('Test email error:', error);
+      res.status(500).json({ message: "Test e-posta gönderiminde hata oluştu" });
     }
   });
 
