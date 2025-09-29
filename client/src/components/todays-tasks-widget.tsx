@@ -3,12 +3,15 @@
 //BERATCAKIROGLU OZEL ANALİZ TAKIP SISTEMI
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Task } from "@shared/schema";
-import { CheckCircle2, Circle, Plus, Calendar } from "lucide-react";
+import { CheckCircle2, Circle, Plus, Calendar, PartyPopper } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
 
 export function TodaysTasksWidget() {
   const { toast } = useToast();
+  const [celebratingTask, setCelebratingTask] = useState<string | null>(null);
+  const [showCompletionBar, setShowCompletionBar] = useState(false);
   
   // Kategori isimlerini düzgün formatta gösterecek fonksiyon
   const getCategoryText = (category: string) => {
@@ -69,13 +72,35 @@ export function TodaysTasksWidget() {
   const toggleTaskMutation = useMutation({
     mutationFn: (taskId: string) => 
       apiRequest("PATCH", `/api/tasks/${taskId}/toggle`),
-    onSuccess: () => {
+    onSuccess: (_, taskId) => {
+      // Görev tamamlandı mı kontrol et
+      const task = tasks.find(t => t.id === taskId);
+      const wasCompleted = task?.completed;
+      
       queryClient.invalidateQueries({ queryKey: ["/api/calendar", todayStr] });
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      toast({
-        title: "Görev güncellendi",
-        description: "Görev durumu başarıyla değiştirildi.",
-      });
+      
+      // Eğer görev şimdi tamamlandıysa celebration göster
+      if (!wasCompleted) {
+        setCelebratingTask(taskId);
+        setShowCompletionBar(true);
+        
+        toast({
+          title: "🎉 Tebrikler!",
+          description: "Görev başarıyla tamamlandı!",
+        });
+
+        // 3 saniye sonra celebration'ı kaldır
+        setTimeout(() => {
+          setCelebratingTask(null);
+          setShowCompletionBar(false);
+        }, 3000);
+      } else {
+        toast({
+          title: "Görev güncellendi",
+          description: "Görev durumu başarıyla değiştirildi.",
+        });
+      }
     },
     onError: () => {
       toast({
@@ -106,7 +131,14 @@ export function TodaysTasksWidget() {
   }
 
   return (
-    <div className="bg-card rounded-xl border border-border p-6 transition-colors duration-300 h-full flex flex-col">
+    <div className="bg-card rounded-xl border border-border p-6 transition-colors duration-300 h-full flex flex-col relative overflow-hidden">
+      {/* Completion Bar - Görev tamamlandığında gösterilir */}
+      {showCompletionBar && (
+        <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 h-2 z-10 animate-pulse">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping"></div>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-foreground flex items-center">
           <Calendar className="h-5 w-5 mr-2 text-primary" />
@@ -133,13 +165,15 @@ export function TodaysTasksWidget() {
             ></div>
           </div>
 
-          {/* Görev Listesi */}
-          <div className="space-y-3 flex-1 min-h-0 overflow-y-auto">
+          {/* Görev Listesi - Kutunun en altına kadar uzar */}
+          <div className="space-y-3 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {tasks.map((task) => (
               <div
                 key={task.id}
-                className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 hover:bg-muted/50 ${
-                  task.completed 
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 hover:bg-muted/50 relative ${
+                  celebratingTask === task.id 
+                    ? 'bg-gradient-to-r from-green-100/80 to-emerald-100/80 dark:from-green-900/40 dark:to-emerald-900/40 border-green-300 dark:border-green-600 scale-105 shadow-lg' 
+                    : task.completed 
                     ? 'bg-muted/30 border-muted' 
                     : 'bg-background border-border/50 hover:border-border'
                 }`}
@@ -148,6 +182,14 @@ export function TodaysTasksWidget() {
                 }}
                 data-testid={`list-task-${task.id}`}
               >
+                {/* Celebration efekti */}
+                {celebratingTask === task.id && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-emerald-400/20 animate-pulse rounded-lg pointer-events-none">
+                    <div className="absolute top-2 right-2">
+                      <PartyPopper className="h-5 w-5 text-green-600 animate-bounce" />
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={() => toggleTaskMutation.mutate(task.id)}
                   className={`flex-shrink-0 transition-colors duration-200 ${

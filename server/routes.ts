@@ -16,6 +16,7 @@ import {
 import { z } from "zod";
 import dotenv from "dotenv";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import PDFKit from "pdfkit";
 import nodemailer from "nodemailer";
 dotenv.config();
 
@@ -1420,10 +1421,286 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
   };
 
-  // PDF Report Email Endpoint - Simplified for initial setup
+  // PDF İçerik Oluşturma Fonksiyonu - PDFKit ile Türkçe karakter desteği
+  const generatePDFContent = (doc: any, reportData: any) => {
+    // Türkçe karakterleri güvenli şekilde temizle
+    const turkishToSafe = (text: string): string => {
+      return text
+        .replace(/ç/g, 'c').replace(/Ç/g, 'C')
+        .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+        .replace(/ı/g, 'i').replace(/I/g, 'I')
+        .replace(/İ/g, 'I').replace(/ö/g, 'o')
+        .replace(/Ö/g, 'O').replace(/ş/g, 's')
+        .replace(/Ş/g, 'S').replace(/ü/g, 'u')
+        .replace(/Ü/g, 'U');
+    };
+    
+    // Sayfa boyutları
+    const pageWidth = 595;
+    const pageHeight = 842;
+    const margin = 50;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Başlık
+    doc.fontSize(24)
+       .fillColor('#4F46E5')
+       .font('Helvetica-Bold')
+       .text(turkishToSafe('Aylik Aktivite Raporu'), margin, margin, { align: 'center' });
+    
+    // Tarih
+    const currentDate = new Date().toLocaleDateString('tr-TR', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+    doc.fontSize(12)
+       .fillColor('#6B7280')
+       .font('Helvetica')
+       .text(`Rapor Tarihi: ${turkishToSafe(currentDate)}`, margin, margin + 40, { align: 'center' });
+    
+    // Alt başlık
+    doc.fontSize(16)
+       .fillColor('#4F46E5')
+       .font('Helvetica-Bold')
+       .text(turkishToSafe('Berat Cakiroglu icin hazirlanmistir'), margin, margin + 70, { align: 'center' });
+    
+    let yPosition = margin + 120;
+    
+    // Özet kartları başlığı
+    doc.fontSize(14)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(turkishToSafe('Aylik Ozet'), margin, yPosition);
+    
+    yPosition += 30;
+    
+    // Özet verileri - basit layout
+    const cardHeight = 25;
+    
+    // Görevler
+    doc.fontSize(12)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(`Tamamlanan Gorev: ${reportData.totalTasks || 0}`, margin, yPosition);
+    yPosition += cardHeight;
+    
+    // Sorular  
+    doc.fontSize(12)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(`Cozulen Soru: ${reportData.totalQuestions || 0}`, margin, yPosition);
+    yPosition += cardHeight;
+    
+    // Denemeler
+    doc.fontSize(12)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(`Yapilan Deneme: ${reportData.totalExams || 0}`, margin, yPosition);
+    yPosition += cardHeight;
+    
+    // Toplam Aktivite
+    doc.fontSize(12)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(`Toplam Aktivite: ${reportData.totalActivities || 0}`, margin, yPosition);
+    yPosition += cardHeight + 20;
+    
+    // Performans detayları
+    doc.fontSize(14)
+       .fillColor('#374151')
+       .font('Helvetica-Bold')
+       .text(turkishToSafe('Performans Detaylari'), margin, yPosition);
+    yPosition += 30;
+    
+    // Haftalık performans
+    if (reportData.weeklyData && reportData.weeklyData.length > 0) {
+      doc.fontSize(12)
+         .fillColor('#6B7280')
+         .font('Helvetica')
+         .text(turkishToSafe('Haftalik Performans Trendi:'), margin, yPosition);
+      
+      yPosition += 20;
+      
+      reportData.weeklyData.forEach((week: any, index: number) => {
+        doc.fontSize(10)
+           .fillColor('#374151')
+           .text(`Hafta ${index + 1}: %${week.productivity}`, margin, yPosition);
+        yPosition += 15;
+      });
+    }
+    
+    yPosition += 20;
+    
+    // Eksik konular
+    if (reportData.missingTopics && reportData.missingTopics.length > 0) {
+      doc.fontSize(14)
+         .fillColor('#374151')
+         .font('Helvetica-Bold')
+         .text(turkishToSafe('Calisilmasi Gereken Konular'), margin, yPosition);
+      
+      yPosition += 25;
+      
+      reportData.missingTopics.slice(0, 10).forEach((topic: any, index: number) => {
+        const safeSubject = turkishToSafe(topic.subject || '');
+        const safeTopic = turkishToSafe(topic.topic || '');
+        
+        doc.fontSize(10)
+           .fillColor('#374151')
+           .text(`${index + 1}. ${safeSubject}: ${safeTopic} (${topic.frequency}x)`, margin, yPosition);
+        
+        yPosition += 15;
+        
+        // Sayfa sonu kontrolü
+        if (yPosition > pageHeight - 100) {
+          doc.addPage();
+          yPosition = margin;
+        }
+      });
+    }
+    
+    // Alt bilgi
+    doc.fontSize(8)
+       .fillColor('#9CA3AF')
+       .text(
+         turkishToSafe('Bu rapor Berat Cakiroglu Ozel Analiz Takip Sistemi tarafindan otomatik olarak olusturulmustur.'),
+         margin,
+         pageHeight - 60,
+         { align: 'center' }
+       )
+       .text(
+         `Olusturma Tarihi: ${new Date().toLocaleString('en-US')}`,
+         margin,
+         pageHeight - 45,
+         { align: 'center' }
+       );
+  };
+
+  // PDF Report Email Endpoint - Enhanced implementation
   app.post("/api/send-report", async (req, res) => {
-    // TODO: Implement full PDF generation functionality later
-    res.status(501).json({ message: "PDF report generation is temporarily disabled for initial setup" });
+    try {
+      const { email, phone, reportData } = req.body;
+      
+      if (!email || !reportData) {
+        return res.status(400).json({ message: "Email ve rapor verisi gerekli" });
+      }
+
+      // PDF oluştur - PDFKit kullanarak
+      const doc = new PDFKit({
+        size: 'A4',
+        margins: { top: 50, bottom: 50, left: 50, right: 50 },
+        info: {
+          Title: 'Aylık Aktivite Raporu',
+          Author: 'Berat Çakıroğlu Ders Analiz Sistemi',
+          Subject: 'Aylık Çalışma Performans Raporu'
+        }
+      });
+
+      // Türkçe karakter desteği için font yükle
+      try {
+        // PDFKit ile gömülü font kullanarak Türkçe karakter desteği
+        // Eğer özel font yoksa, built-in Helvetica kullanacak
+        doc.registerFont('DefaultFont', 'Helvetica');
+      } catch (error) {
+        console.warn('Font loading warning:', error.message);
+      }
+
+      // PDF buffer'ını oluştur
+      const buffers: Buffer[] = [];
+      doc.on('data', buffers.push.bind(buffers));
+      
+      await new Promise<void>((resolve) => {
+        doc.on('end', resolve);
+        
+        // PDF içeriği oluştur
+        generatePDFContent(doc, reportData);
+        doc.end();
+      });
+
+      const pdfBuffer = Buffer.concat(buffers);
+
+      // E-posta gönderimi
+      
+      // SMTP konfigürasyonu
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        secure: false,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS
+        }
+      });
+
+      // E-posta ayarları
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+        to: email,
+        subject: `📊 Aylık Aktivite Raporu - ${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 16px;">
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #4F46E5; margin: 0; font-size: 28px; font-weight: bold;">📊 Aylık Aktivite Raporu</h1>
+                <p style="color: #6B7280; margin: 10px 0 0 0; font-size: 16px;">${new Date().toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })} Dönemi</p>
+              </div>
+              
+              <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                <h2 style="color: #374151; margin: 0 0 15px 0; font-size: 20px;">👋 Merhaba!</h2>
+                <p style="color: #6B7280; margin: 0; line-height: 1.6; font-size: 14px;">
+                  Bu ay boyunca ki ders çalışma aktivitelerinizin detaylı raporunu ekte bulabilirsiniz. 
+                  Raporunuz PDF formatında hazırlanmış ve tüm önemli metrikleri içermektedir.
+                </p>
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px;">
+                <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); padding: 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: #92400E;">${reportData.totalTasks || 0}</div>
+                  <div style="font-size: 12px; color: #A16207; font-weight: 600;">Tamamlanan Görev</div>
+                </div>
+                <div style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); padding: 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; font-weight: bold; color: #1E40AF;">${reportData.totalQuestions || 0}</div>
+                  <div style="font-size: 12px; color: #1D4ED8; font-weight: 600;">Çözülen Soru</div>
+                </div>
+              </div>
+
+              <div style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
+                <h3 style="color: #7C3AED; margin: 0 0 10px 0; font-size: 18px;">🎯 Aylık Performans</h3>
+                <p style="color: #8B5CF6; margin: 0; font-size: 14px; font-weight: 600;">
+                  Toplam ${reportData.totalActivities || 0} aktivite gerçekleştirdiniz!
+                </p>
+              </div>
+
+              <div style="border-top: 2px solid #E5E7EB; padding-top: 20px; text-align: center;">
+                <p style="color: #9CA3AF; margin: 0; font-size: 12px;">
+                  📧 Bu rapor otomatik olarak oluşturulmuştur<br>
+                  📱 İletişim: ${phone || 'Belirtilmemiş'}
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+        attachments: [
+          {
+            filename: `aktivite-raporu-${new Date().toLocaleDateString('tr-TR').replace(/\./g, '-')}.pdf`,
+            content: pdfBuffer,
+            contentType: 'application/pdf'
+          }
+        ]
+      };
+
+      // E-postayı gönder
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await transporter.sendMail(mailOptions);
+        res.json({ message: "Rapor başarıyla e-posta adresinize gönderildi!" });
+      } else {
+        // E-posta kimlik bilgileri yoksa sadece PDF oluştur ve başarı mesajı döndür
+        res.json({ message: "PDF raporu oluşturuldu! (E-posta ayarları yapılandırılmamış)" });
+      }
+
+    } catch (error) {
+      console.error('PDF/Email error:', error);
+      res.status(500).json({ message: "Rapor gönderilirken hata oluştu: " + error.message });
+    }
   });
 
   const httpServer = createServer(app);

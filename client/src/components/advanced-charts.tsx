@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { TrendingUp, Target, Brain, AlertTriangle, BarChart3, Book, Calculator, Atom, FlaskConical, Dna, User, Calendar, TrendingDown, Check, CheckCircle } from "lucide-react";
 import { ExamResult, QuestionLog } from "@shared/schema";
-import { useMemo, useState, memo, useCallback } from "react";
+import { useMemo, useState, memo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -48,6 +48,64 @@ function AdvancedChartsComponent() {
   const [removedTopics, setRemovedTopics] = useState<Set<string>>(new Set());
   const [removedErrorTopics, setRemovedErrorTopics] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+
+  // localStorage'dan state'leri yükle
+  useEffect(() => {
+    try {
+      const savedRemovedTopics = localStorage.getItem('removedTopics');
+      const savedRemovedErrorTopics = localStorage.getItem('removedErrorTopics');
+      const savedCompletedTopics = localStorage.getItem('completedTopics');
+      const savedCompletedErrorTopics = localStorage.getItem('completedErrorTopics');
+      
+      if (savedRemovedTopics) {
+        setRemovedTopics(new Set(JSON.parse(savedRemovedTopics)));
+      }
+      if (savedRemovedErrorTopics) {
+        setRemovedErrorTopics(new Set(JSON.parse(savedRemovedErrorTopics)));
+      }
+      if (savedCompletedTopics) {
+        setCompletedTopics(new Set(JSON.parse(savedCompletedTopics)));
+      }
+      if (savedCompletedErrorTopics) {
+        setCompletedErrorTopics(new Set(JSON.parse(savedCompletedErrorTopics)));
+      }
+    } catch (error) {
+      console.error('Error loading state from localStorage:', error);
+    }
+  }, []);
+
+  // localStorage'a state'leri kaydet
+  useEffect(() => {
+    try {
+      localStorage.setItem('removedTopics', JSON.stringify(Array.from(removedTopics)));
+    } catch (error) {
+      console.error('Error saving removedTopics to localStorage:', error);
+    }
+  }, [removedTopics]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('removedErrorTopics', JSON.stringify(Array.from(removedErrorTopics)));
+    } catch (error) {
+      console.error('Error saving removedErrorTopics to localStorage:', error);
+    }
+  }, [removedErrorTopics]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('completedTopics', JSON.stringify(Array.from(completedTopics)));
+    } catch (error) {
+      console.error('Error saving completedTopics to localStorage:', error);
+    }
+  }, [completedTopics]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('completedErrorTopics', JSON.stringify(Array.from(completedErrorTopics)));
+    } catch (error) {
+      console.error('Error saving completedErrorTopics to localStorage:', error);
+    }
+  }, [completedErrorTopics]);
 
   // Konu isimlerinden TYT/AYT ve konu başlıklarını kaldırmak için yardımcı işlev.
   const normalizeTopic = (topic: string): string => {

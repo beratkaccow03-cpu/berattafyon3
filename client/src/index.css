@@ -269,6 +269,87 @@
     }
   }
 }
+
+/* Modern Purple Scrollbar Styles - Kaliteli ve Şık */
+/* Webkit tabanlı tarayıcılar için (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: hsl(248 39% 39% / 0.1);
+  border-radius: 4px;
+  margin: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, hsl(271 76% 53%), hsl(271 76% 45%));
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, hsl(271 76% 45%), hsl(271 76% 40%));
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+  transform: scale(1.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, hsl(271 76% 40%), hsl(271 76% 35%));
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.5);
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox için scrollbar styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(271 76% 53%) hsl(248 39% 39% / 0.1);
+}
+
+/* Global scrollbar - tüm sayfa için */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(271 76% 53%) hsl(248 39% 39% / 0.1);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: hsl(248 39% 39% / 0.1);
+  border-radius: 4px;
+  margin: 2px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, hsl(271 76% 53%), hsl(271 76% 45%));
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, hsl(271 76% 45%), hsl(271 76% 40%));
+  box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+  transform: scale(1.1);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, hsl(271 76% 40%), hsl(271 76% 35%));
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.5);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* BERATCAKIROGLU OZEL ANALIZ TAKIP SISTEMI */
 /* BERATCAKIROGLU OZEL ANALIZ TAKIP SISTEMI */
 /* BERATCAKIROGLU OZEL ANALIZ TAKIP SISTEMI */

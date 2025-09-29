@@ -108,6 +108,7 @@ function CenteredWelcomeSection() {
 
 export default function Homepage() {
   const [selectedDate, setSelectedDate] = useState<string>("");
+  const [activityFilter, setActivityFilter] = useState<'all' | 'tasks' | 'questions' | 'exams'>('all');
   
   // Stakvim navigasyonu için durum (güncel tarihten ayrı)
   const currentDate = new Date();
@@ -738,9 +739,57 @@ export default function Homepage() {
                                 <div className="w-2 h-2 bg-primary rounded-full mr-2"></div>
                                 Aktivite Detayları
                               </h5>
-                              <div className="space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                              
+                              {/* Filter Buttons */}
+                              <div className="flex gap-2 mb-3">
+                                <button 
+                                  onClick={() => setActivityFilter('all')}
+                                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                    activityFilter === 'all' 
+                                      ? 'bg-primary text-white shadow-sm' 
+                                      : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground'
+                                  }`}
+                                  data-testid="button-filter-all"
+                                >
+                                  Tümü
+                                </button>
+                                <button 
+                                  onClick={() => setActivityFilter('tasks')}
+                                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                    activityFilter === 'tasks' 
+                                      ? 'bg-green-500 text-white shadow-sm' 
+                                      : 'bg-green-50 dark:bg-green-950/20 hover:bg-green-100 dark:hover:bg-green-950/30 text-green-700 dark:text-green-300'
+                                  }`}
+                                  data-testid="button-filter-tasks"
+                                >
+                                  Görev
+                                </button>
+                                <button 
+                                  onClick={() => setActivityFilter('questions')}
+                                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                    activityFilter === 'questions' 
+                                      ? 'bg-blue-500 text-white shadow-sm' 
+                                      : 'bg-blue-50 dark:bg-blue-950/20 hover:bg-blue-100 dark:hover:bg-blue-950/30 text-blue-700 dark:text-blue-300'
+                                  }`}
+                                  data-testid="button-filter-questions"
+                                >
+                                  Soru
+                                </button>
+                                <button 
+                                  onClick={() => setActivityFilter('exams')}
+                                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                                    activityFilter === 'exams' 
+                                      ? 'bg-purple-500 text-white shadow-sm' 
+                                      : 'bg-purple-50 dark:bg-purple-950/20 hover:bg-purple-100 dark:hover:bg-purple-950/30 text-purple-700 dark:text-purple-300'
+                                  }`}
+                                  data-testid="button-filter-exams"
+                                >
+                                  Deneme
+                                </button>
+                              </div>
+                              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
                                 {/* Tamamlanan görevleri göster */}
-                                {activities.tasks.map((task: Task) => (
+                                {(activityFilter === 'all' || activityFilter === 'tasks') && activities.tasks.map((task: Task) => (
                                   <div key={task.id} className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/10 rounded-lg">
                                     <div className="flex items-center text-sm">
                                       <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
@@ -754,7 +803,7 @@ export default function Homepage() {
                                 ))}
                                 
                                 {/* Soru günlüklerini göster */}
-                                {activities.questionLogs.map((log: QuestionLog) => (
+                                {(activityFilter === 'all' || activityFilter === 'questions') && activities.questionLogs.map((log: QuestionLog) => (
                                   <div key={log.id} className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950/10 rounded-lg">
                                     <div className="flex items-center text-sm">
                                       <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
@@ -768,7 +817,7 @@ export default function Homepage() {
                                 ))}
                                 
                                 {/* Sınav sonuçlarını göster */}
-                                {activities.examResults.map((exam: ExamResult) => (
+                                {(activityFilter === 'all' || activityFilter === 'exams') && activities.examResults.map((exam: ExamResult) => (
                                   <div key={exam.id} className="flex items-center justify-between p-2 bg-purple-50 dark:bg-purple-950/10 rounded-lg">
                                     <div className="flex items-center text-sm">
                                       <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>

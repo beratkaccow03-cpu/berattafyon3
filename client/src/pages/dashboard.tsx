@@ -814,7 +814,7 @@ export default function Dashboard() {
 
                   {/* Soru Kayıtları Listesi - Düzenleme/Silme ile - 3 öğe ile sınırlı */}
                   <div className="space-y-3">
-                    <div className="space-y-3 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                    <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
                       {questionLogs.map((log, index) => (
                       <div key={log.id} className="p-4 bg-gradient-to-r from-green-100/30 to-emerald-100/30 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl border border-green-200/50 transition-all hover:scale-102 hover:shadow-md">
                         <div className="flex items-center justify-between mb-2">
@@ -943,7 +943,7 @@ export default function Dashboard() {
             ) : (
               <div className="space-y-6">
                 {/* Sadece 2 deneme sonucu ile sınırlı */}
-                <div className="space-y-6 max-h-[800px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                <div className="space-y-6 max-h-[800px] overflow-y-auto custom-scrollbar">
                   {examResults
                     .sort((a, b) => new Date(b.exam_date).getTime() - new Date(a.exam_date).getTime())
                     .map((exam, index) => {
@@ -1165,7 +1165,7 @@ export default function Dashboard() {
 
       {/* Isı Haritası Gün Detayları Diyaloğu */}
       <Dialog open={selectedHeatmapDay !== null} onOpenChange={(open) => !open && setSelectedHeatmapDay(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto custom-scrollbar">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarDays className="h-5 w-5 text-purple-500" />
@@ -1686,7 +1686,7 @@ export default function Dashboard() {
 
       {/* Sınav Sonucu Diyaloğu */}
       <Dialog open={showExamDialog} onOpenChange={setShowExamDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar">
           <DialogHeader>
             <DialogTitle>Yeni Deneme Sonucu</DialogTitle>
             <DialogDescription>
