@@ -1,3 +1,0 @@
-Anasayfada takvimde o an olduğum güne tıklayınca aşağıda açılan yerde "1 gün sonra" diyor Bugün yazması gerekirken ayrıca + Görev Ekle ve Takvime ekle butonu çıkıyor onları kaldır(ss koy). Yapılacaklar kısmında bir görev eklediğim zaman anasayfadaki Bugün Yapılacaklar kısmında otomatik olarak düşmüyor,güncellenmiyor ve Takvim kısmında olduğum güne tıklayınca altta açılan yerde "Planlanan Aktiviteler
-0
-Henüz bu güne özel görev planlanmamış" diyor göstermiyor.
