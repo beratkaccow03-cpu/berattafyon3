@@ -52,10 +52,11 @@ This is a comprehensive personal study tracking and analysis system designed for
 - **Database**: PostgreSQL with migrations via `npm run db:push`
 
 ### Deployment Configuration
-- **Target**: VM deployment (stateful application)
+- **Target**: Autoscale deployment (stateless web application)
 - **Build Command**: `npm run build`
 - **Start Command**: `npm start`
 - **Port**: 5000 (configured for Replit proxy)
+- **Note**: Currently using in-memory storage; consider migrating to PostgreSQL for data persistence in production
 
 ## User Preferences
 - **Language**: Turkish (application is fully localized)
