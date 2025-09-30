@@ -1982,9 +1982,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Resimleri yükle
-      const ataturkImage = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturk_1759231788864.jpg'));
-      const ataturkSignature = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturkimza_1759231788864.jpg'));
-      const turkishFlag = fs.readFileSync(path.join(process.cwd(), 'attached_assets/turkbayragi_1759231788865.jpg'));
+      const ataturkImage = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturk_1759235084194.png'));
+      const ataturkSignature = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturkimza_1759235084194.png'));
+      const turkishFlag = fs.readFileSync(path.join(process.cwd(), 'attached_assets/turkbayragi_1759235084194.png'));
 
       // Başarı koşullarını kontrol et
       const showAchievements = reportData.totalQuestions >= 1000 || 
@@ -2200,17 +2200,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         `,
         attachments: [
           {
-            filename: 'ataturk.jpg',
+            filename: 'ataturk.png',
             content: ataturkImage,
             cid: 'ataturkphoto'
           },
           {
-            filename: 'ataturk-imza.jpg',
+            filename: 'ataturk-imza.png',
             content: ataturkSignature,
             cid: 'ataturksignature'
           },
           {
-            filename: 'turk-bayragi.jpg',
+            filename: 'turk-bayragi.png',
             content: turkishFlag,
             cid: 'turkishflag'
           }
