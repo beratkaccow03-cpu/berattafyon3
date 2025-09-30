@@ -236,6 +236,40 @@ export default function Homepage() {
         sum + parseInt(log.wrong_count || '0'), 0
       );
 
+      // Hata yapılan konuları topla ve sırala
+      const wrongTopicsMap: Record<string, { count: number, subject: string }> = {};
+      monthlyQuestionLogs.forEach((log: any) => {
+        const wrongTopics = log.wrong_topics || [];
+        wrongTopics.forEach((topic: string) => {
+          if (!wrongTopicsMap[topic]) {
+            wrongTopicsMap[topic] = { count: 0, subject: log.subject || 'Bilinmeyen' };
+          }
+          wrongTopicsMap[topic].count++;
+        });
+      });
+
+      const frequentWrongTopics = Object.entries(wrongTopicsMap)
+        .map(([topic, data]) => ({ topic, count: data.count, subject: data.subject }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      // Rekor deneme netleri hesapla
+      const tytExams = monthlyExamResults.filter((exam: any) => exam.exam_type === 'TYT');
+      const aytExams = monthlyExamResults.filter((exam: any) => exam.exam_type === 'AYT');
+      
+      const maxTytNet = tytExams.length > 0 
+        ? Math.max(...tytExams.map((exam: any) => parseFloat(exam.tyt_net || '0')))
+        : 0;
+      const maxAytNet = aytExams.length > 0
+        ? Math.max(...aytExams.map((exam: any) => parseFloat(exam.ayt_net || '0')))
+        : 0;
+
+      // Deneme detaylarını hazırla (subjectNets ile birlikte)
+      const examDetailsWithSubjects = monthlyExamResults.map((exam: any) => ({
+        ...exam,
+        subjects: exam.subjects_data || []
+      }));
+
       const comprehensiveReportData = {
         totalTasks: monthlyTasks.length,
         totalQuestions: totalQuestions,
@@ -248,6 +282,10 @@ export default function Homepage() {
         tasks: monthlyTasks,
         questionLogs: monthlyQuestionLogs,
         examResults: monthlyExamResults,
+        examDetailsWithSubjects: examDetailsWithSubjects,
+        frequentWrongTopics: frequentWrongTopics,
+        maxTytNet: maxTytNet,
+        maxAytNet: maxAytNet,
         user: {
           name: 'Berat Çakıroğlu',
           email: 'beratkaccow03@gmail.com'

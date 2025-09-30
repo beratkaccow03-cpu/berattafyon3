@@ -2129,12 +2129,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 </div>
                 ` : ""}
 
-                <!-- 4. Hata Yapılan Konular -->
-                ${reportData.wrongTopics && reportData.wrongTopics.length > 0 ? `
+                <!-- 4. Rekor Deneme Netleri -->
+                ${(reportData.maxTytNet > 0 || reportData.maxAytNet > 0) ? `
+                <div style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #3B82F6;">
+                  <h3 style="color: #1E40AF; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">🏆 BU AYIN REKOR DENEME NETLERİ</h3>
+                  <div style="display: table; width: 100%;">
+                    ${reportData.maxTytNet > 0 ? `
+                    <div style="display: table-cell; width: 50%; padding-right: 10px;">
+                      <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #8B5CF6;">
+                        <div style="font-size: 16px; color: #6B7280; margin-bottom: 10px; font-weight: 600;">TYT Rekor Net</div>
+                        <div style="font-size: 42px; font-weight: bold; color: #8B5CF6;">${reportData.maxTytNet}</div>
+                      </div>
+                    </div>
+                    ` : ''}
+                    ${reportData.maxAytNet > 0 ? `
+                    <div style="display: table-cell; width: 50%; padding-left: ${reportData.maxTytNet > 0 ? '10px' : '0'};">
+                      <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #EF4444;">
+                        <div style="font-size: 16px; color: #6B7280; margin-bottom: 10px; font-weight: 600;">AYT Rekor Net</div>
+                        <div style="font-size: 42px; font-weight: bold; color: #EF4444;">${reportData.maxAytNet}</div>
+                      </div>
+                    </div>
+                    ` : ''}
+                  </div>
+                </div>
+                ` : ""}
+
+                <!-- 5. Sık Hata Yapılan Konular -->
+                ${reportData.frequentWrongTopics && reportData.frequentWrongTopics.length > 0 ? `
                 <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #EF4444;">
-                  <h3 style="color: #991B1B; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">⚠️ HATA YAPILAN KONULAR</h3>
+                  <h3 style="color: #991B1B; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">⚠️ SIK HATA YAPILAN KONULAR</h3>
                   <div style="color: #7F1D1D; font-size: 15px; line-height: 1.7;">
-                    ${reportData.wrongTopics.slice(0, 5).map(topic => `<div style="background: white; padding: 14px; margin: 10px 0; border-radius: 10px; border-left: 4px solid #EF4444;">• ${topic}</div>`).join('')}
+                    ${reportData.frequentWrongTopics.slice(0, 10).map((item, index) => `
+                      <div style="background: white; padding: 16px 20px; margin: 10px 0; border-radius: 10px; border-left: 4px solid #EF4444; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <strong style="color: #991B1B;">${index + 1}. ${item.topic}</strong>
+                          <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">${item.subject}</div>
+                        </div>
+                        <div style="background: #EF4444; color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                          ${item.count}x
+                        </div>
+                      </div>
+                    `).join('')}
                   </div>
                 </div>
                 ` : ""}
@@ -2181,6 +2216,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
                       </div>
                     `).join('')}
                   </div>
+                </div>
+                ` : ""}
+
+                <!-- Deneme Detayları -->
+                ${reportData.examDetailsWithSubjects && reportData.examDetailsWithSubjects.length > 0 ? `
+                <div style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #8B5CF6;">
+                  <h3 style="color: #6B21A8; margin: 0 0 25px 0; font-size: 22px; font-weight: bold;">📋 DENEME DETAYLARI</h3>
+                  ${reportData.examDetailsWithSubjects.map((exam, examIndex) => `
+                    <div style="background: white; padding: 25px; margin-bottom: 20px; border-radius: 14px; border: 2px solid #A78BFA;">
+                      <!-- Deneme Başlığı -->
+                      <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #E9D5FF;">
+                        <h4 style="color: #7C3AED; margin: 0 0 8px 0; font-size: 18px; font-weight: bold;">${exam.exam_name || `Deneme ${examIndex + 1}`}</h4>
+                        <div style="color: #6B7280; font-size: 14px;">
+                          📅 ${new Date(exam.exam_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })} | 
+                          📝 ${exam.exam_type || 'N/A'}
+                        </div>
+                      </div>
+
+                      <!-- Toplam Netler -->
+                      <div style="display: table; width: 100%; margin-bottom: 20px;">
+                        ${exam.tyt_net ? `
+                        <div style="display: table-cell; width: 50%; padding-right: 10px;">
+                          <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">TYT Net</div>
+                            <div style="font-size: 28px; font-weight: bold;">${exam.tyt_net}</div>
+                          </div>
+                        </div>
+                        ` : ''}
+                        ${exam.ayt_net ? `
+                        <div style="display: table-cell; width: 50%; padding-left: ${exam.tyt_net ? '10px' : '0'};">
+                          <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">AYT Net</div>
+                            <div style="font-size: 28px; font-weight: bold;">${exam.ayt_net}</div>
+                          </div>
+                        </div>
+                        ` : ''}
+                      </div>
+
+                      <!-- Ders Detayları -->
+                      ${exam.subjects && exam.subjects.length > 0 ? `
+                      <div style="margin-top: 20px;">
+                        <h5 style="color: #6B21A8; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">📚 Ders Bazında Performans</h5>
+                        ${exam.subjects.map((subject, subIndex) => `
+                          <div style="background: #F9FAFB; padding: 15px; margin: 10px 0; border-radius: 10px; border-left: 4px solid ${subIndex % 2 === 0 ? '#8B5CF6' : '#3B82F6'};">
+                            <!-- Ders Adı -->
+                            <div style="font-weight: bold; color: #1F2937; margin-bottom: 10px; font-size: 15px;">${subject.subject || 'Bilinmeyen Ders'}</div>
+                            
+                            <!-- Doğru Yanlış Boş Net -->
+                            <div style="display: table; width: 100%; margin-bottom: 10px;">
+                              <div style="display: table-cell; width: 25%; padding-right: 5px;">
+                                <div style="background: white; padding: 8px; border-radius: 6px; text-align: center; border: 2px solid #10B981;">
+                                  <div style="font-size: 11px; color: #6B7280; margin-bottom: 3px;">Doğru</div>
+                                  <div style="font-size: 16px; font-weight: bold; color: #10B981;">${subject.correct_count || 0}</div>
+                                </div>
+                              </div>
+                              <div style="display: table-cell; width: 25%; padding: 0 5px;">
+                                <div style="background: white; padding: 8px; border-radius: 6px; text-align: center; border: 2px solid #EF4444;">
+                                  <div style="font-size: 11px; color: #6B7280; margin-bottom: 3px;">Yanlış</div>
+                                  <div style="font-size: 16px; font-weight: bold; color: #EF4444;">${subject.wrong_count || 0}</div>
+                                </div>
+                              </div>
+                              <div style="display: table-cell; width: 25%; padding: 0 5px;">
+                                <div style="background: white; padding: 8px; border-radius: 6px; text-align: center; border: 2px solid #F59E0B;">
+                                  <div style="font-size: 11px; color: #6B7280; margin-bottom: 3px;">Boş</div>
+                                  <div style="font-size: 16px; font-weight: bold; color: #F59E0B;">${subject.blank_count || 0}</div>
+                                </div>
+                              </div>
+                              <div style="display: table-cell; width: 25%; padding-left: 5px;">
+                                <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); padding: 8px; border-radius: 6px; text-align: center;">
+                                  <div style="font-size: 11px; color: white; opacity: 0.9; margin-bottom: 3px;">Net</div>
+                                  <div style="font-size: 16px; font-weight: bold; color: white;">${subject.net_score || 0}</div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Yanlış Konular -->
+                            ${subject.wrong_topics && subject.wrong_topics.length > 0 ? `
+                            <div style="margin-top: 12px; padding: 12px; background: white; border-radius: 8px;">
+                              <div style="font-size: 12px; color: #991B1B; font-weight: bold; margin-bottom: 8px;">❌ Yanlış Yapılan Konular:</div>
+                              <div style="font-size: 12px; color: #7F1D1D; line-height: 1.6;">
+                                ${subject.wrong_topics.map(topic => `<div style="padding: 4px 0;">• ${topic}</div>`).join('')}
+                              </div>
+                            </div>
+                            ` : '<div style="margin-top: 8px; font-size: 12px; color: #10B981; font-style: italic;">✅ Bu derste yanlış konu kaydı yok</div>'}
+                          </div>
+                        `).join('')}
+                      </div>
+                      ` : ''}
+                    </div>
+                  `).join('')}
                 </div>
                 ` : ""}
 
