@@ -12,6 +12,7 @@ import {
   insertExamResultSchema,
   insertFlashcardSchema,
   insertExamSubjectNetSchema,
+  insertStudyHoursSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import dotenv from "dotenv";
@@ -2929,6 +2930,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res
         .status(500)
         .json({ message: "Test e-posta gönderiminde hata oluştu" });
+    }
+  });
+
+  // Çalışma saati routes
+  app.get("/api/study-hours", async (req, res) => {
+    try {
+      const studyHours = await storage.getStudyHours();
+      res.json(studyHours);
+    } catch (error) {
+      res.status(500).json({ message: "Çalışma saatleri getirilirken hata oluştu" });
+    }
+  });
+
+  app.post("/api/study-hours", async (req, res) => {
+    try {
+      const validatedData = insertStudyHoursSchema.parse(req.body);
+      const studyHours = await storage.createStudyHours(validatedData);
+      res.status(201).json(studyHours);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Geçersiz çalışma saati verisi", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Çalışma saati oluşturulurken hata oluştu" });
+      }
+    }
+  });
+
+  app.patch("/api/study-hours/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertStudyHoursSchema.partial().parse(req.body);
+      const studyHours = await storage.updateStudyHours(id, validatedData);
+      
+      if (!studyHours) {
+        return res.status(404).json({ message: "Çalışma saati kaydı bulunamadı" });
+      }
+      
+      res.json(studyHours);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Geçersiz çalışma saati verisi", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Çalışma saati güncellenirken hata oluştu" });
+      }
+    }
+  });
+
+  app.delete("/api/study-hours/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteStudyHours(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Çalışma saati kaydı bulunamadı" });
+      }
+      
+      res.json({ message: "Çalışma saati kaydı silindi" });
+    } catch (error) {
+      res.status(500).json({ message: "Çalışma saati silinirken hata oluştu" });
     }
   });
 
