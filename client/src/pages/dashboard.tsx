@@ -2838,7 +2838,7 @@ export default function Dashboard() {
                 <Clock className="h-4 w-4" />
                 Eklenen Çalışma Saatleri
               </h3>
-              <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+              <div className="max-h-[11rem] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                 {[...studyHours].sort((a, b) => new Date(b.study_date).getTime() - new Date(a.study_date).getTime()).map((sh: any) => (
                   <div
                     key={sh.id}
