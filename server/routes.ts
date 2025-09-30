@@ -152,6 +152,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { date } = req.params; // YYYY-AA-GG format
       const tasksForDate = await storage.getTasksByDate(date);
+      
+      // Çalışma saatlerini getir
+      const allStudyHours = await storage.getStudyHours();
+      const studyHoursForDate = allStudyHours.filter((sh: any) => sh.study_date === date);
+      
+      // Soru loglarını getir
+      const allQuestionLogs = await storage.getQuestionLogs();
+      const questionsForDate = allQuestionLogs.filter((q: any) => q.date === date);
+      
+      // Sınav sonuçlarını getir
+      const allExamResults = await storage.getExamResults();
+      const examsForDate = allExamResults.filter((e: any) => e.exam_date === date);
 
       // günlük kalan gün sayısı hesaplama
       const today = new Date();
@@ -170,6 +182,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         daysRemaining: diffDays,
         tasks: tasksForDate,
         tasksCount: tasksForDate.length,
+        studyHours: studyHoursForDate,
+        questions: questionsForDate,
+        exams: examsForDate,
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch calendar data" });
