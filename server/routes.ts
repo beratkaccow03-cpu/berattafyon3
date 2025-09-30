@@ -2608,7 +2608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!emailUser || !emailPass) {
         return res.status(400).json({
           success: false,
-          message: "E-posta ayarları yapılandırılmamış! 📧",
+          message: ".env Ayarları Yapılandırılmamış! 📧",
           details: "Rapor göndermek için e-posta ayarlarınızı yapmanız gerekiyor.",
           instructions: [
             "1. Replit Secrets bölümüne gidin",
