@@ -473,8 +473,9 @@ export default function Dashboard() {
         const completedDate = new Date(task.completedAt).toISOString().split('T')[0];
         return completedDate === dateStr;
       });
+      const dayStudyHours = studyHours.filter(sh => sh.study_date === dateStr);
       
-      const studyIntensity = Math.min((dayQuestions.length * 2 + dayTasks.length) / 10, 1);
+      const studyIntensity = Math.min((dayQuestions.length * 2 + dayTasks.length + dayStudyHours.length * 3) / 15, 1);
       
       // Bugün olup olmadığını kontrol et - Sabit karşılaştırma
       const isToday = dateStr === todayDateStr;
@@ -486,9 +487,10 @@ export default function Dashboard() {
         dayOfWeek: currentDate.getDay(), // 0 = Pazar, 1 = Pazartesi, vsvs.
         dayOfWeekISO: currentDate.getDay() === 0 ? 7 : currentDate.getDay(), // 1 = Pazartesi, 7 = Pazar
         intensity: studyIntensity,
-        count: dayQuestions.length + dayTasks.length,
+        count: dayQuestions.length + dayTasks.length + dayStudyHours.length,
         questionCount: dayQuestions.length,
         taskCount: dayTasks.length,
+        studyHoursCount: dayStudyHours.length,
         isToday: isToday
       });
       
@@ -561,13 +563,15 @@ export default function Dashboard() {
       return completedDate === day.date;
     });
     const dayExams = examResults.filter(exam => exam.exam_date === day.date);
+    const dayStudyHours = studyHours.filter(sh => sh.study_date === day.date);
     
     setSelectedHeatmapDay({
       ...day,
       dayActivities: {
         questions: dayQuestions,
         tasks: dayTasks,
-        exams: dayExams
+        exams: dayExams,
+        studyHours: dayStudyHours
       }
     });
   };
@@ -757,7 +761,7 @@ export default function Dashboard() {
                                   animation: day.isToday ? 'breathingPulse 2s ease-in-out infinite' : undefined,
                                   boxShadow: day.isToday ? '0 0 15px rgba(147, 51, 234, 0.5)' : undefined
                                 }}
-                                title={`${day.date}${day.isToday ? ' (BUGÜN)' : ''}: ${day.count} aktivite (${day.questionCount} soru, ${day.taskCount} görev)`}
+                                title={`${day.date}${day.isToday ? ' (BUGÜN)' : ''}: ${day.count} aktivite (${day.questionCount} soru, ${day.taskCount} görev, ${day.studyHoursCount || 0} çalışma saati)`}
                                 onClick={() => handleHeatmapDayClick(day)}
                               />
                             );

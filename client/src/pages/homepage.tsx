@@ -407,6 +407,10 @@ export default function Homepage() {
     queryKey: ["/api/exam-results"],
   });
 
+  const { data: studyHours = [] } = useQuery<any[]>({
+    queryKey: ["/api/study-hours"],
+  });
+
   // Takvim günlerini önbelleğe almak için memoize edilmiş oluşturma
   const calendarDays = useMemo(() => {
     const year = displayYear;
@@ -467,8 +471,11 @@ export default function Homepage() {
     // Sınav sonuçlarını kontrol et
     const hasExamResults = examResults.some(exam => exam.exam_date === dateStr);
     
-    return hasCompletedTasks || hasScheduledTasks || hasQuestionLogs || hasExamResults;
-  }, [allTasks, questionLogs, examResults]);
+    // Çalışma saatlerini kontrol et
+    const hasStudyHours = studyHours.some(sh => sh.study_date === dateStr);
+    
+    return hasCompletedTasks || hasScheduledTasks || hasQuestionLogs || hasExamResults || hasStudyHours;
+  }, [allTasks, questionLogs, examResults, studyHours]);
 
   // Belirli bir tarih için etkinlikleri al
   const getActivitiesForDate = useCallback((date: Date) => {
@@ -482,14 +489,16 @@ export default function Homepage() {
     
     const dayQuestionLogs = questionLogs.filter(log => log.study_date === dateStr);
     const dayExamResults = examResults.filter(exam => exam.exam_date === dateStr);
+    const dayStudyHours = studyHours.filter(sh => sh.study_date === dateStr);
     
     return {
       tasks: completedTasks,
       questionLogs: dayQuestionLogs,
       examResults: dayExamResults,
-      total: completedTasks.length + dayQuestionLogs.length + dayExamResults.length
+      studyHours: dayStudyHours,
+      total: completedTasks.length + dayQuestionLogs.length + dayExamResults.length + dayStudyHours.length
     };
-  }, [allTasks, questionLogs, examResults]);
+  }, [allTasks, questionLogs, examResults, studyHours]);
 
   // Ay sonuna kadar kalan günleri hesapla
   const getDaysUntilMonthEnd = useCallback(() => {
@@ -507,6 +516,7 @@ export default function Homepage() {
       tasks: [] as Task[],
       questionLogs: [] as QuestionLog[],
       examResults: [] as ExamResult[],
+      studyHours: [] as any[],
       total: 0
     };
 
@@ -517,10 +527,11 @@ export default function Homepage() {
       activities.tasks.push(...dayActivities.tasks);
       activities.questionLogs.push(...dayActivities.questionLogs);
       activities.examResults.push(...dayActivities.examResults);
+      activities.studyHours.push(...dayActivities.studyHours);
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    activities.total = activities.tasks.length + activities.questionLogs.length + activities.examResults.length;
+    activities.total = activities.tasks.length + activities.questionLogs.length + activities.examResults.length + activities.studyHours.length;
     return activities;
   }, [getActivitiesForDate]);
 
