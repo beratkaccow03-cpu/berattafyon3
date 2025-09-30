@@ -173,6 +173,35 @@ export default function Dashboard() {
     queryKey: ["/api/study-hours"],
   });
 
+  // 1 haftadan eski çalışma saatlerini otomatik sil
+  useEffect(() => {
+    const deleteOldStudyHours = async () => {
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const oldRecords = studyHours.filter((sh: any) => {
+        const recordDate = new Date(sh.study_date);
+        return recordDate < oneWeekAgo;
+      });
+
+      for (const record of oldRecords) {
+        try {
+          await apiRequest("DELETE", `/api/study-hours/${record.id}`);
+        } catch (error) {
+          console.error("Eski çalışma saati silinirken hata:", error);
+        }
+      }
+      
+      if (oldRecords.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ["/api/study-hours"] });
+      }
+    };
+
+    if (studyHours.length > 0) {
+      deleteOldStudyHours();
+    }
+  }, [studyHours.length]);
+
   // Gereksiz yeniden render işlemlerini önlemek için useMemo ile optimize edilmiş hesaplamalar
   const memoizedStats = useMemo(() => {
     const totalQuestions = questionLogs.reduce((sum, log) => {
