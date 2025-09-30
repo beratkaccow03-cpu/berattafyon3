@@ -96,6 +96,15 @@ export const flashcards = pgTable("flashcards", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const studyHours = pgTable("study_hours", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  study_date: text("study_date").notNull(), // Çalışma günü (YYYY-MM-DD formatında)
+  hours: integer("hours").notNull().default(0),
+  minutes: integer("minutes").notNull().default(0),
+  seconds: integer("seconds").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 const taskSchemaBase = createInsertSchema(tasks);
 export const insertTaskSchema = taskSchemaBase.omit({ id: true, createdAt: true, completedAt: true });
 
@@ -124,6 +133,9 @@ export const insertFlashcardSchema = flashcardSchemaBase.omit({ id: true, create
 const examSubjectNetSchemaBase = createInsertSchema(examSubjectNets);
 export const insertExamSubjectNetSchema = examSubjectNetSchemaBase.omit({ id: true, createdAt: true });
 
+const studyHoursSchemaBase = createInsertSchema(studyHours);
+export const insertStudyHoursSchema = studyHoursSchemaBase.omit({ id: true, createdAt: true });
+
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
 export type InsertMood = z.infer<typeof insertMoodSchema>;
@@ -138,3 +150,5 @@ export type InsertFlashcard = z.infer<typeof insertFlashcardSchema>;
 export type Flashcard = typeof flashcards.$inferSelect;
 export type InsertExamSubjectNet = z.infer<typeof insertExamSubjectNetSchema>;
 export type ExamSubjectNet = typeof examSubjectNets.$inferSelect;
+export type InsertStudyHours = z.infer<typeof insertStudyHoursSchema>;
+export type StudyHours = typeof studyHours.$inferSelect;

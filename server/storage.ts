@@ -1,7 +1,7 @@
 //BERATCAKIROGLU OZEL ANALİZ TAKIP SISTEMI
 //BERATCAKIROGLU OZEL ANALİZ TAKIP SISTEMI
 //BERATCAKIROGLU OZEL ANALİZ TAKIP SISTEMI
-import { type Task, type InsertTask, type Mood, type InsertMood, type Goal, type InsertGoal, type QuestionLog, type InsertQuestionLog, type ExamResult, type InsertExamResult, type ExamSubjectNet, type InsertExamSubjectNet } from "@shared/schema";
+import { type Task, type InsertTask, type Mood, type InsertMood, type Goal, type InsertGoal, type QuestionLog, type InsertQuestionLog, type ExamResult, type InsertExamResult, type ExamSubjectNet, type InsertExamSubjectNet, type StudyHours, type InsertStudyHours } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -52,6 +52,13 @@ export interface IStorage {
   updateExamSubjectNet(id: string, updates: Partial<InsertExamSubjectNet>): Promise<ExamSubjectNet | undefined>;
   deleteExamSubjectNet(id: string): Promise<boolean>;
   deleteExamSubjectNetsByExamId(examId: string): Promise<boolean>;
+  
+  // Çalışma saati işlemleri
+  getStudyHours(): Promise<StudyHours[]>;
+  getStudyHoursByDate(date: string): Promise<StudyHours | undefined>;
+  createStudyHours(studyHours: InsertStudyHours): Promise<StudyHours>;
+  updateStudyHours(id: string, updates: Partial<InsertStudyHours>): Promise<StudyHours | undefined>;
+  deleteStudyHours(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -61,6 +68,7 @@ export class MemStorage implements IStorage {
   private questionLogs: Map<string, QuestionLog>;
   private examResults: Map<string, ExamResult>;
   private examSubjectNets: Map<string, ExamSubjectNet>;
+  private studyHours: Map<string, StudyHours>;
 
   constructor() {
     this.tasks = new Map();
@@ -69,6 +77,7 @@ export class MemStorage implements IStorage {
     this.questionLogs = new Map();
     this.examResults = new Map();
     this.examSubjectNets = new Map();
+    this.studyHours = new Map();
     
     // Bazı örnek hedeflerle başlatın
     this.initializeSampleGoals();
@@ -602,6 +611,49 @@ export class MemStorage implements IStorage {
       }
     }
     return deletedAny;
+  }
+
+  // Çalışma saati işlemleri
+  async getStudyHours(): Promise<StudyHours[]> {
+    return Array.from(this.studyHours.values()).sort((a, b) => 
+      new Date(b.study_date).getTime() - new Date(a.study_date).getTime()
+    );
+  }
+
+  async getStudyHoursByDate(date: string): Promise<StudyHours | undefined> {
+    return Array.from(this.studyHours.values()).find(sh => sh.study_date === date);
+  }
+
+  async createStudyHours(insertHours: InsertStudyHours): Promise<StudyHours> {
+    const id = randomUUID();
+    const studyHours: StudyHours = {
+      id,
+      study_date: insertHours.study_date,
+      hours: insertHours.hours ?? 0,
+      minutes: insertHours.minutes ?? 0,
+      seconds: insertHours.seconds ?? 0,
+      createdAt: new Date(),
+    };
+    this.studyHours.set(id, studyHours);
+    return studyHours;
+  }
+
+  async updateStudyHours(id: string, updates: Partial<InsertStudyHours>): Promise<StudyHours | undefined> {
+    const existing = this.studyHours.get(id);
+    if (!existing) {
+      return undefined;
+    }
+
+    const updated: StudyHours = {
+      ...existing,
+      ...updates,
+    };
+    this.studyHours.set(id, updated);
+    return updated;
+  }
+
+  async deleteStudyHours(id: string): Promise<boolean> {
+    return this.studyHours.delete(id);
   }
 }
 export const storage = new MemStorage();
