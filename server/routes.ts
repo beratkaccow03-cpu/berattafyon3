@@ -18,6 +18,8 @@ import dotenv from "dotenv";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import PDFKit from "pdfkit";
 import nodemailer from "nodemailer";
+import fs from "fs";
+import path from "path";
 dotenv.config();
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1878,32 +1880,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       { align: "center", width: contentWidth },
     );
 
-    yPos += 60;
-    doc
-      .fontSize(14)
-      .fillColor(colors.primary)
-      .font("Helvetica-Bold")
-      .text("📧 İLETİŞİM BİLGİLERİ", margin, yPos, {
-        align: "center",
-        width: contentWidth,
-      });
-
-    yPos += 30;
-    doc
-      .fontSize(11)
-      .fillColor(colors.muted)
-      .font("Helvetica")
-      .text("E-posta: beratkaccow03@gmail.com", margin, yPos, {
-        align: "center",
-        width: contentWidth,
-      });
-
-    yPos += 18;
-    doc.text("Konum: Sakarya, Serdivan", margin, yPos, {
-      align: "center",
-      width: contentWidth,
-    });
-
     // Alt bilgi
     yPos = pageHeight - 60;
     doc
@@ -1979,78 +1955,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // PDF Report Email Endpoint - Enhanced implementation with validation
+  // Email Report Endpoint - Modern HTML email with embedded images
   app.post("/api/send-report", async (req, res) => {
     try {
-      const { email, phone, reportData } = req.body;
+      const { reportData } = req.body;
 
-      if (!email || !reportData) {
+      if (!reportData) {
         return res
           .status(400)
-          .json({ message: "Email ve rapor verisi gerekli" });
+          .json({ message: "Rapor verisi gerekli" });
       }
 
-      // Email format validation
-      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (!emailRegex.test(email)) {
-        return res
-          .status(400)
-          .json({ message: "Geçerli bir email adresi giriniz" });
-      }
-
-      // Test email addresses'i engelle
-      const testDomains = ["example.com", "test.com", "fake.com", "dummy.com"];
-      const emailDomain = email.split("@")[1].toLowerCase();
-      if (testDomains.includes(emailDomain)) {
-        return res
-          .status(400)
-          .json({ message: "Lütfen gerçek bir email adresi kullanın" });
-      }
-
-      // PDF oluştur - PDFKit kullanarak
-      const doc = new PDFKit({
-        size: "A4",
-        margins: { top: 50, bottom: 50, left: 50, right: 50 },
-        info: {
-          Title: "Aylık Aktivite Raporu",
-          Author: "Berat Çakıroğlu Ders Analiz Sistemi",
-          Subject: "Aylık Çalışma Performans Raporu",
-        },
-      });
-
-      // Türkçe karakter desteği için font yükle
-      try {
-        // PDFKit ile gömülü font kullanarak Türkçe karakter desteği
-        // Eğer özel font yoksa, built-in Helvetica kullanacak
-        doc.registerFont("DefaultFont", "Helvetica");
-      } catch (error) {
-        console.warn("Font loading warning:", error.message);
-      }
-
-      // PDF buffer'ını oluştur
-      const buffers: Buffer[] = [];
-      doc.on("data", buffers.push.bind(buffers));
-
-      await new Promise<void>((resolve) => {
-        doc.on("end", resolve);
-
-        // PDF içeriği oluştur
-        generatePDFContent(doc, reportData);
-        doc.end();
-      });
-
-      const pdfBuffer = Buffer.concat(buffers);
-
-      // E-posta gönderimi
-
-      // Gmail SMTP konfigürasyonu - İyileştirilmiş
+      // Gmail SMTP konfigürasyonu
       const transporter = nodemailer.createTransport({
         service: "gmail",
         host: "smtp.gmail.com",
         port: 587,
         secure: false,
         auth: {
-        user: process.env.EMAIL_USER || process.env.GMAIL_USER,
+          user: process.env.EMAIL_USER || process.env.GMAIL_USER,
           pass: process.env.EMAIL_PASS || process.env.GMAIL_PASS,
         },
         tls: {
@@ -2058,146 +1981,242 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // E-posta ayarları
+      // Resimleri yükle
+      const fs = require('fs');
+      const path = require('path');
+      
+      const ataturkImage = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturk_1759231788864.jpg'));
+      const ataturkSignature = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturkimza_1759231788864.jpg'));
+      const turkishFlag = fs.readFileSync(path.join(process.cwd(), 'attached_assets/turkbayragi_1759231788865.jpg'));
+
+      // Başarı koşullarını kontrol et
+      const showAchievements = reportData.totalQuestions >= 1000 || 
+        (reportData.tyt_net >= 60 && reportData.ayt_net >= 35);
+
+      // Performans mesajını aktivite sayısına göre ayarla  
+      let performanceMessage = '';
+      const activities = reportData.totalActivities || 0;
+      if (activities === 0) {
+        performanceMessage = 'Bu ay henüz aktivite kaydım yok. Çalışmaya başlamak için harika bir zaman!';
+      } else if (activities < 10) {
+        performanceMessage = `Bu ay ${activities} aktivite gerçekleştirdim. Yola çıktım ve ilerlemeye devam ediyorum! 🚀`;
+      } else if (activities < 30) {
+        performanceMessage = `Bu ay ${activities} aktivite ile istikrarlı bir performans sergiledim. Bu tempoda ilerliyorum! 💪`;
+      } else if (activities < 60) {
+        performanceMessage = `Bu ay ${activities} aktivite ile kararlı bir tempo yakaladım. Hedefineme yaklaşıyorum! 🎯`;
+      } else {
+        performanceMessage = `Bu ay ${activities} aktivite ile üst düzey bir ritim sergiledim! Hedefineme kesinlikle ulaşacağım! 🌟`;
+      }
+
+      // Modern HTML Email içeriği
       const mailOptions = {
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-        to: email,
-        subject: `📊 Aylık Aktivite Raporu - ${new Date().toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}`,
+        to: 'beratkaccow03@gmail.com, brtbllcankir03@gmail.com',
+        subject: `📊 Aylık Çalışma Raporum - ${new Date().toLocaleDateString("tr-TR", { month: "long", year: "numeric" })}`,
         html: `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 700px; margin: 0 auto; background: linear-gradient(135deg, #E30A17 0%, #8B5CF6 50%, #E30A17 100%); padding: 25px; border-radius: 16px;">
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 20px; background: #F3F4F6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             
-            <!-- Türk Bayrakları ve Atatürk Sözü - En Üst -->
-            <div style="position: relative; background: rgba(255, 255, 255, 0.98); border-radius: 16px; padding: 25px; margin-bottom: 25px; text-align: center; border: 3px solid #E30A17; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-              <!-- Sol Üst Türk Bayrağı -->
-              <div style="position: absolute; top: 15px; left: 15px; width: 40px; height: 25px; background: #E30A17; border-radius: 3px;">
-                <div style="position: absolute; left: 6px; top: 8px; width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
-                <div style="position: absolute; left: 12px; top: 10px; width: 0; height: 0; border-left: 4px solid white; border-top: 2px solid transparent; border-bottom: 2px solid transparent;"></div>
-              </div>
-              <!-- Sağ Üst Türk Bayrağı -->
-              <div style="position: absolute; top: 15px; right: 15px; width: 40px; height: 25px; background: #E30A17; border-radius: 3px;">
-                <div style="position: absolute; left: 6px; top: 8px; width: 8px; height: 8px; background: white; border-radius: 50%;"></div>
-                <div style="position: absolute; left: 12px; top: 10px; width: 0; height: 0; border-left: 4px solid white; border-top: 2px solid transparent; border-bottom: 2px solid transparent;"></div>
-              </div>
+            <div style="max-width: 800px; margin: 0 auto; background: linear-gradient(135deg, #E30A17 0%, #8B5CF6 50%, #E30A17 100%); padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
               
-              <!-- Atatürk Sözü - İsteğiniz üzere büyük, kalın, italik -->
-              <div style="margin: 15px 0;">
-                <p style="color: #1E293B; margin: 0; font-size: 18px; font-weight: bold; line-height: 1.5; font-style: italic; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
-                  "Biz her şeyi gençliğe bırakacağız... Geleceğin ümidi,<br>
-                  ışıklı çiçekleri onlardır. Bütün ümidim gençliktedir."
-                </p>
-                <p style="color: #E30A17; margin: 12px 0 0 0; font-size: 14px; font-weight: bold; font-style: italic;">
-                  - Mustafa Kemal Atatürk -
-                </p>
-              </div>
-            </div>
-
-            <div style="background: white; border-radius: 16px; padding: 35px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); border: 2px solid rgba(139, 92, 246, 0.3);">
-              
-              <!-- Modern Başlık -->
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #8B5CF6; margin: 0 0 10px 0; font-size: 28px; font-weight: bold;">🎓 BERAT ÇAKIROĞLU</h1>
-                <h2 style="color: #E30A17; margin: 0 0 15px 0; font-size: 20px; font-weight: bold;">KİŞİSEL ÇALIŞMA ANALİZ RAPORU</h2>
-                <p style="color: #6B7280; margin: 0; font-size: 14px;">📅 ${new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} | 🏆 Mükemmellik Yolunda</p>
-              </div>
-
-              <!-- Başarı Mesajı -->
-              <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
-                <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold;">🌟 BU AY HARİKA BİR PERFORMANS SERGİLEDİNİZ!</h3>
-                <p style="margin: 0; font-size: 14px; opacity: 0.9;">Hedefinize doğru emin adımlarla ilerliyorsunuz. Her çalışma sizi başarıya yaklaştırıyor!</p>
-              </div>
-
-              <!-- Ana İstatistik Kartları - Geliştirilmiş Tasarım -->
-              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
-                <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);">
-                  <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px;">${reportData.totalTasks || 0}</div>
-                  <div style="font-size: 12px; opacity: 0.9;">📋 Tamamlanan Görev</div>
+              <!-- Atatürk Sözü Bölümü - En Üst -->
+              <div style="background: rgba(255, 255, 255, 0.98); border-radius: 20px; padding: 35px; margin-bottom: 25px; text-align: center; border: 4px solid #E30A17; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
+                
+                <!-- Türk Bayrağı -->
+                <div style="margin-bottom: 25px;">
+                  <img src="cid:turkishflag" alt="Türk Bayrağı" style="width: 130px; height: auto; border-radius: 10px; box-shadow: 0 6px 16px rgba(0,0,0,0.25);" />
                 </div>
-                <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                  <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px;">${reportData.totalQuestions || 0}</div>
-                  <div style="font-size: 12px; opacity: 0.9;">📚 Çözülen Soru</div>
+
+                <!-- Atatürk Sözü -->
+                <div style="margin: 25px 0;">
+                  <p style="color: #1E293B; margin: 0; font-size: 21px; font-weight: bold; line-height: 1.7; font-style: italic; text-shadow: 1px 1px 3px rgba(0,0,0,0.1);">
+                    "Biz her şeyi gençliğe bırakacağız... Geleceğin ümidi,<br>
+                    ışıklı çiçekleri onlardır. Bütün ümidim gençliktedir."
+                  </p>
+                  <p style="color: #E30A17; margin: 18px 0 0 0; font-size: 17px; font-weight: bold; font-style: italic;">
+                    - Mustafa Kemal Atatürk -
+                  </p>
                 </div>
-                <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
-                  <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px;">${reportData.totalExams || 0}</div>
-                  <div style="font-size: 12px; opacity: 0.9;">🎯 Deneme Sınavı</div>
+
+                <!-- Atatürk İmzası -->
+                <div style="margin: 25px 0;">
+                  <img src="cid:ataturksignature" alt="Atatürk İmza" style="width: 200px; height: auto; opacity: 0.9;" />
+                </div>
+
+                <!-- Atatürk Fotoğrafı -->
+                <div style="margin-top: 30px;">
+                  <img src="cid:ataturkphoto" alt="Mustafa Kemal Atatürk" style="width: 150px; height: auto; border-radius: 15px; border: 4px solid #E30A17; box-shadow: 0 8px 24px rgba(0,0,0,0.35);" />
                 </div>
               </div>
 
-              <!-- Performans Analizi -->
-              ${
-                reportData.totalQuestions > 0
-                  ? `
-              <div style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px;">
-                <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; display: flex; align-items: center;">
-                  🎯 PERFORMANS ANALİZİ
-                </h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                  <div>
-                    <div style="font-size: 24px; font-weight: bold;">${Math.round((reportData.correctAnswers / reportData.totalQuestions) * 100)}%</div>
-                    <div style="font-size: 12px; opacity: 0.9;">Başarı Oranı</div>
+              <!-- Ana İçerik Alanı -->
+              <div style="background: white; border-radius: 20px; padding: 45px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                
+                <!-- Başlık -->
+                <div style="text-align: center; margin-bottom: 40px;">
+                  <h1 style="color: #8B5CF6; margin: 0 0 12px 0; font-size: 34px; font-weight: bold; text-transform: uppercase;">🎓 BERAT ÇAKIROĞLU</h1>
+                  <h2 style="color: #E30A17; margin: 0 0 18px 0; font-size: 24px; font-weight: bold;">KİŞİSEL ÇALIŞMA ANALİZ RAPORU</h2>
+                  <p style="color: #6B7280; margin: 0; font-size: 16px;">📅 ${new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} | 🎯 O üniversite kazanılacak!</p>
+                </div>
+
+                <!-- 1. Çözülen Soru ve Deneme -->
+                <div style="display: table; width: 100%; margin-bottom: 30px;">
+                  <div style="display: table-cell; width: 50%; padding-right: 10px;">
+                    <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 30px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+                      <div style="font-size: 48px; font-weight: bold; margin-bottom: 10px;">${reportData.totalQuestions || 0}</div>
+                      <div style="font-size: 16px; opacity: 0.95; font-weight: 600; letter-spacing: 0.5px;">📚 ÇÖZÜLEN SORU</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style="font-size: 24px; font-weight: bold;">${(reportData.correctAnswers - reportData.wrongAnswers * 0.25).toFixed(1)}</div>
-                    <div style="font-size: 12px; opacity: 0.9;">Net Puan</div>
+                  <div style="display: table-cell; width: 50%; padding-left: 10px;">
+                    <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 30px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4); min-height: 120px; display: flex; flex-direction: column; justify-content: center;">
+                      <div style="font-size: 48px; font-weight: bold; margin-bottom: 10px;">${reportData.totalExams || 0}</div>
+                      <div style="font-size: 16px; opacity: 0.95; font-weight: 600; letter-spacing: 0.5px;">🎯 ÇÖZÜLEN DENEME</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-              `
-                  : ""
-              }
 
-              <!-- Motivasyonel İçerik -->
-              <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #8B5CF6;">
-                <h3 style="color: #1E293B; margin: 0 0 15px 0; font-size: 16px; font-weight: bold;">💫 BU AYIN ÖNE ÇIKAN BAŞARILARI</h3>
-                <ul style="color: #374151; margin: 0; padding-left: 20px; line-height: 1.6;">
-                  ${reportData.totalQuestions > 50 ? `<li>${reportData.totalQuestions} soru ile mükemmel bir çalışma temposu sergiledינiz</li>` : ""}
-                  ${reportData.correctAnswers > reportData.wrongAnswers ? `<li>Doğru cevaplarınız yanlışlarınızdan fazla - harika bir performans!</li>` : ""}
-                  ${reportData.totalTasks > 10 ? `<li>${reportData.totalTasks} görevi başarıyla tamamladınız</li>` : ""}
-                  ${reportData.totalExams > 3 ? `<li>${reportData.totalExams} deneme sınavı ile kendinizi test ettiniz</li>` : ""}
-                  <li>Disiplinli çalışma alışkanlığınızı sürdürüyorsunuz</li>
-                  <li>Her gün hedefinize bir adım daha yaklaşıyorsunuz</li>
-                </ul>
-              </div>
+                <!-- 2. Doğru ve Yanlış Sayısı -->
+                ${
+                  reportData.totalQuestions > 0
+                    ? `
+                <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #10B981;">
+                  <h3 style="color: #1E293B; margin: 0 0 25px 0; font-size: 20px; font-weight: bold;">📊 DOĞRU VE YANLIŞ ANALİZİ</h3>
+                  <div style="display: table; width: 100%;">
+                    <div style="display: table-cell; width: 50%; padding-right: 10px;">
+                      <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #10B981;">
+                        <div style="font-size: 42px; font-weight: bold; color: #10B981; margin-bottom: 8px;">${reportData.correctAnswers || 0}</div>
+                        <div style="font-size: 15px; color: #059669; font-weight: 600;">✅ Doğru Cevap</div>
+                      </div>
+                    </div>
+                    <div style="display: table-cell; width: 50%; padding-left: 10px;">
+                      <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #F59E0B;">
+                        <div style="font-size: 42px; font-weight: bold; color: #F59E0B; margin-bottom: 8px;">${reportData.wrongAnswers || 0}</div>
+                        <div style="font-size: 15px; color: #D97706; font-weight: 600;">❌ Yanlış Cevap</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="margin-top: 25px; text-align: center; padding: 20px; background: white; border-radius: 14px; border: 2px solid #8B5CF6;">
+                    <div style="font-size: 38px; font-weight: bold; color: #8B5CF6; margin-bottom: 8px;">${Math.round((reportData.correctAnswers / reportData.totalQuestions) * 100)}%</div>
+                    <div style="font-size: 16px; color: #6B7280; font-weight: 600;">Başarı Oranım</div>
+                  </div>
+                </div>
+                    `
+                    : ""
+                }
 
-              <!-- Detaylı PDF Eki Bilgisi -->
-              <div style="background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; text-align: center;">
-                <h3 style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold;">📎 DETAYLI ANALİZ RAPORU EKTE</h3>
-                <p style="margin: 0; font-size: 14px; opacity: 0.9;">
-                  Tüm aktivitelerinizin detaylı analizi, performans grafikleri ve öneriler PDF raporunda yer almaktadır.
-                  Gelişim alanlarınızı keşfetmek için mutlaka inceleyiniz!
-                </p>
-              </div>
+                <!-- 3. Toplam Aktivite -->
+                <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 30px; border-radius: 18px; margin-bottom: 30px; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);">
+                  <h3 style="margin: 0 0 18px 0; font-size: 20px; font-weight: bold;">📈 TOPLAM AKTİVİTE</h3>
+                  <div style="font-size: 48px; font-weight: bold; margin: 18px 0;">${reportData.totalActivities || 0}</div>
+                  <p style="margin: 0; font-size: 16px; opacity: 0.95; line-height: 1.6;">
+                    ${performanceMessage}
+                  </p>
+                </div>
 
-              <!-- Toplam Aktivite Özet -->
-              <div style="text-align: center; margin-bottom: 25px; padding: 20px; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); border-radius: 12px; color: white;">
-                <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold;">🎊 TOPLAM AKTİVİTE</h3>
-                <div style="font-size: 32px; font-weight: bold; margin: 10px 0;">${reportData.totalActivities || 0}</div>
-                <p style="margin: 0; font-size: 14px; opacity: 0.9;">
-                  Bu ay toplam ${reportData.totalActivities || 0} aktivite ile harika bir performans sergiledizimiz!<br>
-                  Bu tempoda devam ederseniz hedefinize kesinlikle ulaşacaksınız! 💪
-                </p>
-              </div>
+                ${showAchievements ? `
+                <!-- Bu Ayın Öne Çıkan Başarıları -->
+                <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #F59E0B;">
+                  <h3 style="color: #92400E; margin: 0 0 22px 0; font-size: 20px; font-weight: bold;">💫 BU AYIN ÖNE ÇIKAN BAŞARILARI</h3>
+                  <ul style="color: #78350F; margin: 0; padding-left: 22px; line-height: 1.9; font-size: 15px;">
+                    ${reportData.totalQuestions >= 1000 ? `<li style="margin-bottom: 8px;"><strong>${reportData.totalQuestions}</strong> soru ile inanılmaz bir çalışma temposu sergiledim!</li>` : ""}
+                    ${reportData.tyt_net >= 60 ? `<li style="margin-bottom: 8px;">TYT'de <strong>${reportData.tyt_net}</strong> net ile hedefime yaklaştım!</li>` : ""}
+                    ${reportData.ayt_net >= 35 ? `<li style="margin-bottom: 8px;">AYT'de <strong>${reportData.ayt_net}</strong> net ile başarılı bir performans gösterdim!</li>` : ""}
+                    <li style="margin-bottom: 8px;">Disiplinli çalışma alışkanlığımı sürdürüyorum</li>
+                    <li>Her gün hedefineme bir adım daha yaklaşıyorum</li>
+                  </ul>
+                </div>
+                ` : ""}
 
-            
+                <!-- 4. Hata Yapılan Konular -->
+                ${reportData.wrongTopics && reportData.wrongTopics.length > 0 ? `
+                <div style="background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #EF4444;">
+                  <h3 style="color: #991B1B; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">⚠️ HATA YAPILAN KONULAR</h3>
+                  <div style="color: #7F1D1D; font-size: 15px; line-height: 1.7;">
+                    ${reportData.wrongTopics.slice(0, 5).map(topic => `<div style="background: white; padding: 14px; margin: 10px 0; border-radius: 10px; border-left: 4px solid #EF4444;">• ${topic}</div>`).join('')}
+                  </div>
+                </div>
+                ` : ""}
 
-              <!-- Kapanış -->
-              <div style="text-align: center; margin-top: 25px; padding: 15px; background: rgba(139, 92, 246, 0.1); border-radius: 12px;">
-                <p style="color: #8B5CF6; margin: 0; font-size: 14px; font-weight: bold;">🚀 Bu E-Posta Berat Çakıroğlu Analiz/Takip Sistemi Tarafından Otomatik Olarak Oluşturulmuştur.</p>
-                <p style="color: #6B7280; margin: 8px 0 0 0; font-size: 12px;">
-                  Bu rapor ${new Date().toLocaleDateString("tr-TR")} tarihinde otomatik olarak oluşturulmuştur.
-                </p>
-                <p style="color: #E30A17; margin: 8px 0 0 0; font-size: 11px; font-weight: bold;">
-                  🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi - Geleceğe Yatırım 🇹🇷
-                </p>
+                <!-- 5. En Çok Hata Yapılan Dersler -->
+                ${reportData.mostWrongSubjects && reportData.mostWrongSubjects.length > 0 ? `
+                <div style="background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #3B82F6;">
+                  <h3 style="color: #1E40AF; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">📉 EN ÇOK HATA YAPILAN DERSLER</h3>
+                  <div>
+                    ${reportData.mostWrongSubjects.slice(0, 3).map((subject, index) => `
+                      <div style="background: white; padding: 18px 22px; margin: 12px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #3B82F6;">
+                        <span style="color: #1E3A8A; font-weight: 600; font-size: 16px;">${index + 1}. ${subject.name}</span>
+                        <span style="color: #EF4444; font-weight: bold; font-size: 20px;">${subject.count} hata</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                ` : ""}
+
+                <!-- 6. En Çok Soru Çözülen Dersler -->
+                ${reportData.mostSolvedSubjects && reportData.mostSolvedSubjects.length > 0 ? `
+                <div style="background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #10B981;">
+                  <h3 style="color: #065F46; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">📚 EN ÇOK SORU ÇÖZÜLEN DERSLER</h3>
+                  <div>
+                    ${reportData.mostSolvedSubjects.slice(0, 3).map((subject, index) => `
+                      <div style="background: white; padding: 18px 22px; margin: 12px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #10B981;">
+                        <span style="color: #064E3B; font-weight: 600; font-size: 16px;">${index + 1}. ${subject.name}</span>
+                        <span style="color: #10B981; font-weight: bold; font-size: 20px;">${subject.count} soru</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                ` : ""}
+
+                <!-- 7. En Çok Doğru Yapılan Dersler -->
+                ${reportData.mostCorrectSubjects && reportData.mostCorrectSubjects.length > 0 ? `
+                <div style="background: linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #8B5CF6;">
+                  <h3 style="color: #5B21B6; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">🏆 EN ÇOK DOĞRU YAPILAN DERSLER</h3>
+                  <div>
+                    ${reportData.mostCorrectSubjects.slice(0, 3).map((subject, index) => `
+                      <div style="background: white; padding: 18px 22px; margin: 12px 0; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #8B5CF6;">
+                        <span style="color: #6D28D9; font-weight: 600; font-size: 16px;">${index + 1}. ${subject.name}</span>
+                        <span style="color: #10B981; font-weight: bold; font-size: 20px;">${subject.count} doğru</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                ` : ""}
+
+                <!-- Kapanış -->
+                <div style="text-align: center; margin-top: 35px; padding: 25px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(227, 10, 23, 0.15) 100%); border-radius: 14px; border: 3px solid #E30A17;">
+                  <p style="color: #8B5CF6; margin: 0 0 12px 0; font-size: 16px; font-weight: bold;">
+                    🚀 Bu rapor ${new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })} tarihinde otomatik olarak oluşturulmuştur.
+                  </p>
+                  <p style="color: #E30A17; margin: 0; font-size: 18px; font-weight: bold;">
+                    🇹🇷 Berat Çakıroğlu Kişisel Analiz Sistemi 🇹🇷
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          </body>
+          </html>
         `,
         attachments: [
           {
-            filename: `aktivite-raporu-${new Date().toLocaleDateString("tr-TR").replace(/\./g, "-")}.pdf`,
-            content: pdfBuffer,
-            contentType: "application/pdf",
+            filename: 'ataturk.jpg',
+            content: ataturkImage,
+            cid: 'ataturkphoto'
           },
+          {
+            filename: 'ataturk-imza.jpg',
+            content: ataturkSignature,
+            cid: 'ataturksignature'
+          },
+          {
+            filename: 'turk-bayragi.jpg',
+            content: turkishFlag,
+            cid: 'turkishflag'
+          }
         ],
       };
 
@@ -2207,7 +2226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const info = await transporter.sendMail(mailOptions);
           console.log("Email sent successfully:", info.messageId);
           res.json({
-            message: "Rapor başarıyla e-posta adresinize gönderildi!",
+            message: "Rapor başarıyla e-posta adreslerine gönderildi!",
           });
         } catch (emailError) {
           console.error("Email sending failed:", emailError);
@@ -2224,7 +2243,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (emailError.responseCode === 550) {
             res.status(400).json({
               message:
-                "Email adresi bulunamadı veya geçersiz. Lütfen doğru email adresini kontrol edin.",
+                "Email adresi bulunamadı veya geçersiz.",
             });
           } else if (emailError.responseCode === 535) {
             res.status(500).json({
@@ -2238,14 +2257,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       } else {
-        // E-posta kimlik bilgileri yoksa sadece PDF oluştur ve başarı mesajı döndür
-        res.json({
-          message:
-            "PDF raporu oluşturuldu! (E-posta ayarları yapılandırılmamış)",
+        res.status(500).json({
+          message: "E-posta ayarları yapılandırılmamış. Lütfen sistem yöneticisine başvurun.",
         });
       }
     } catch (error) {
-      console.error("PDF/Email error:", error);
+      console.error("Email error:", error);
       res
         .status(500)
         .json({ message: "Rapor gönderilirken hata oluştu: " + error.message });
