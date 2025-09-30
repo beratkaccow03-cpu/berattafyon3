@@ -2117,9 +2117,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .slice(0, 3)
         .map(([name, stats]: any) => ({ name, count: stats.wrong }));
       
-      // Frequent wrong topics
+      // Frequent wrong topics (minimum 3 yanlış filtresi)
       const frequentWrongTopics = Array.from(wrongTopicsMap.entries())
         .map(([topic, data]) => ({ topic, count: data.count, subject: data.subject }))
+        .filter(item => item.count >= 3)
         .sort((a, b) => b.count - a.count);
       
       // En çok soru çözülen tarih
