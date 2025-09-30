@@ -109,6 +109,15 @@ export default function Dashboard() {
     phone: ""
   });
 
+  // Çalışma Saati Modal Durumu
+  const [showStudyHoursModal, setShowStudyHoursModal] = useState(false);
+  const [newStudyHours, setNewStudyHours] = useState({
+    study_date: new Date().toISOString().split('T')[0],
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
   // Tüm mutasyonları sil
   const deleteAllQuestionLogsMutation = useMutation({
     mutationFn: () => apiRequest("DELETE", "/api/question-logs/all"),
@@ -158,6 +167,10 @@ export default function Dashboard() {
 
   const { data: priorityTopics = [] } = useQuery<PriorityTopic[]>({
     queryKey: ["/api/topics/priority"],
+  });
+
+  const { data: studyHours = [] } = useQuery<any[]>({
+    queryKey: ["/api/study-hours"],
   });
 
   // Gereksiz yeniden render işlemlerini önlemek için useMemo ile optimize edilmiş hesaplamalar
@@ -298,6 +311,24 @@ export default function Dashboard() {
     },
     onError: () => {
       toast({ title: "Hata", description: "Deneme sonucu silinemedi.", variant: "destructive" });
+    },
+  });
+
+  const createStudyHoursMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/study-hours", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-hours"] });
+      toast({ title: "⏱️ Çalışma saati eklendi", description: "Çalışma süreniz başarıyla kaydedildi!" });
+      setShowStudyHoursModal(false);
+      setNewStudyHours({
+        study_date: new Date().toISOString().split('T')[0],
+        hours: 0,
+        minutes: 0,
+        seconds: 0,
+      });
+    },
+    onError: () => {
+      toast({ title: "❌ Hata", description: "Çalışma saati eklenemedi.", variant: "destructive" });
     },
   });
 
@@ -579,6 +610,18 @@ export default function Dashboard() {
             <Sparkles className="h-10 w-10 text-primary animate-pulse" />
           </h1>
           <p className="text-lg text-muted-foreground">Çalışma verilerim için kapsamlı analiz ve kişiselleştirilmiş sayfa</p>
+          
+          {/* Çalışma Saati Ekle Butonu */}
+          <div className="mt-6 flex justify-center">
+            <Button
+              onClick={() => setShowStudyHoursModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-full text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              data-testid="button-add-study-hours"
+            >
+              <Clock className="mr-2 h-5 w-5" />
+              ⏱️ Çalıştığım Süreyi Ekle
+            </Button>
+          </div>
         </div>
 
         {/* Özet Kartları */}
@@ -2582,6 +2625,143 @@ export default function Dashboard() {
                 İptal
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Çalışma Saati Ekle Modalı */}
+      <Dialog open={showStudyHoursModal} onOpenChange={setShowStudyHoursModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              ⏱️ Çalıştığım Süreyi Ekle
+            </DialogTitle>
+            <DialogDescription className="text-center text-muted-foreground">
+              Bugün çalıştığınız süreyi kaydedin
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Aylık Toplam Gösterim */}
+          {(() => {
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            const monthlyTotal = studyHours
+              .filter((sh: any) => {
+                const date = new Date(sh.study_date);
+                return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+              })
+              .reduce((total: number, sh: any) => {
+                return total + (sh.hours * 3600) + (sh.minutes * 60) + sh.seconds;
+              }, 0);
+            
+            const totalHours = Math.floor(monthlyTotal / 3600);
+            const totalMinutes = Math.floor((monthlyTotal % 3600) / 60);
+            const totalSeconds = monthlyTotal % 60;
+            
+            return (
+              <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 border-2 border-purple-200 dark:border-purple-700 mb-4">
+                <CardContent className="py-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-2">Bu Ay Toplam Çalışma Sürem</p>
+                    <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">
+                      {String(totalHours).padStart(2, '0')}:{String(totalMinutes).padStart(2, '0')}:{String(totalSeconds).padStart(2, '0')}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+          
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                📅 Tarih
+              </label>
+              <Input
+                type="date"
+                value={newStudyHours.study_date}
+                onChange={(e) => setNewStudyHours(prev => ({ ...prev, study_date: e.target.value }))}
+                className="w-full"
+                data-testid="input-study-date"
+              />
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  ⏰ Saat
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={newStudyHours.hours}
+                  onChange={(e) => setNewStudyHours(prev => ({ ...prev, hours: parseInt(e.target.value) || 0 }))}
+                  className="w-full"
+                  data-testid="input-study-hours"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  ⏱️ Dakika
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  placeholder="0"
+                  value={newStudyHours.minutes}
+                  onChange={(e) => setNewStudyHours(prev => ({ ...prev, minutes: parseInt(e.target.value) || 0 }))}
+                  className="w-full"
+                  data-testid="input-study-minutes"
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  ⏲️ Saniye
+                </label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  placeholder="0"
+                  value={newStudyHours.seconds}
+                  onChange={(e) => setNewStudyHours(prev => ({ ...prev, seconds: parseInt(e.target.value) || 0 }))}
+                  className="w-full"
+                  data-testid="input-study-seconds"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3 mt-6">
+            <Button
+              onClick={() => createStudyHoursMutation.mutate(newStudyHours)}
+              disabled={createStudyHoursMutation.isPending}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              data-testid="button-save-study-hours"
+            >
+              💾 Kaydet
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowStudyHoursModal(false);
+                setNewStudyHours({
+                  study_date: new Date().toISOString().split('T')[0],
+                  hours: 0,
+                  minutes: 0,
+                  seconds: 0,
+                });
+              }}
+              className="px-6"
+              data-testid="button-cancel-study-hours"
+            >
+              İptal
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
