@@ -2459,6 +2459,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 </div>
                 ` : ""}
 
+                <!-- 8. En Çok Doğru Yapılan Konular -->
+                ${reportData.mostCorrectTopics && reportData.mostCorrectTopics.length > 0 ? `
+                <div style="background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #10B981;">
+                  <h3 style="color: #065F46; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">🏆 EN ÇOK DOĞRU YAPILAN KONULAR</h3>
+                  <div>
+                    ${reportData.mostCorrectTopics.slice(0, 5).map((topic, index) => `
+                      <div style="background: white; padding: 16px 20px; margin: 10px 0; border-radius: 10px; border-left: 4px solid #10B981; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <strong style="color: #065F46;">${index + 1}. ${topic.subject}</strong>
+                        </div>
+                        <div style="background: #10B981; color: white; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 14px;">
+                          ${topic.correctCount} doğru
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+                ` : ""}
+
                 <!-- Deneme Detayları -->
                 ${reportData.examDetailsWithSubjects && reportData.examDetailsWithSubjects.length > 0 ? `
                 <div style="background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #8B5CF6;">
