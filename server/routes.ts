@@ -1958,13 +1958,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Email Report Endpoint - Modern HTML email with embedded images
   app.post("/api/send-report", async (req, res) => {
     try {
-      const { reportData } = req.body;
-
-      if (!reportData) {
-        return res
-          .status(400)
-          .json({ message: "Rapor verisi gerekli" });
-      }
+      // Fetch REAL data from storage
+      const tasks = await storage.getTasks();
+      const questionLogs = await storage.getQuestionLogs();
+      const examResults = await storage.getExamResults();
+      const completedTasks = tasks.filter(task => task.completed);
+      
+      // Calculate statistics
+      let totalQuestions = 0;
+      let correctAnswers = 0;
+      let wrongAnswers = 0;
+      let blankAnswers = 0;
+      
+      // Subject-level statistics
+      const subjectStats: any = {};
+      const wrongTopicsMap: Map<string, { count: number; subject: string }> = new Map();
+      
+      questionLogs.forEach(log => {
+        const correct = parseInt(log.correct_count) || 0;
+        const wrong = parseInt(log.wrong_count) || 0;
+        const blank = parseInt(log.blank_count) || 0;
+        
+        totalQuestions += correct + wrong + blank;
+        correctAnswers += correct;
+        wrongAnswers += wrong;
+        blankAnswers += blank;
+        
+        // Per subject stats
+        if (!subjectStats[log.subject]) {
+          subjectStats[log.subject] = { correct: 0, wrong: 0, blank: 0, total: 0 };
+        }
+        subjectStats[log.subject].correct += correct;
+        subjectStats[log.subject].wrong += wrong;
+        subjectStats[log.subject].blank += blank;
+        subjectStats[log.subject].total += correct + wrong + blank;
+        
+        // Wrong topics tracking
+        if (log.wrong_topics && log.wrong_topics.length > 0) {
+          log.wrong_topics.forEach(topic => {
+            const existing = wrongTopicsMap.get(topic);
+            if (existing) {
+              existing.count++;
+            } else {
+              wrongTopicsMap.set(topic, { count: 1, subject: log.subject });
+            }
+          });
+        }
+      });
+      
+      // Prepare exam details with subjects
+      const examDetailsWithSubjects = await Promise.all(
+        examResults.map(async (exam) => {
+          const subjects = await storage.getExamSubjectNetsByExamId(exam.id);
+          return {
+            ...exam,
+            subjects: subjects.map(sub => ({
+              subject: sub.subject,
+              net_score: sub.net_score,
+              correct_count: sub.correct_count,
+              wrong_count: sub.wrong_count,
+              blank_count: sub.blank_count,
+              wrong_topics: [] // Can be populated from wrong_topics_json if available
+            }))
+          };
+        })
+      );
+      
+      // Calculate max TYT and AYT nets
+      const maxTytNet = Math.max(...examResults.map(e => parseFloat(e.tyt_net) || 0), 0);
+      const maxAytNet = Math.max(...examResults.map(e => parseFloat(e.ayt_net) || 0), 0);
+      
+      // Most solved subjects (top 3)
+      const mostSolvedSubjects = Object.entries(subjectStats)
+        .sort((a: any, b: any) => b[1].total - a[1].total)
+        .slice(0, 3)
+        .map(([name, stats]: any) => ({ name, count: stats.total }));
+      
+      // Most correct subjects (top 3)
+      const mostCorrectSubjects = Object.entries(subjectStats)
+        .sort((a: any, b: any) => b[1].correct - a[1].correct)
+        .slice(0, 3)
+        .map(([name, stats]: any) => ({ name, count: stats.correct }));
+      
+      // Most wrong subjects (top 3)
+      const mostWrongSubjects = Object.entries(subjectStats)
+        .sort((a: any, b: any) => b[1].wrong - a[1].wrong)
+        .slice(0, 3)
+        .map(([name, stats]: any) => ({ name, count: stats.wrong }));
+      
+      // Frequent wrong topics
+      const frequentWrongTopics = Array.from(wrongTopicsMap.entries())
+        .map(([topic, data]) => ({ topic, count: data.count, subject: data.subject }))
+        .sort((a, b) => b.count - a.count);
+      
+      const reportData = {
+        totalQuestions,
+        correctAnswers,
+        wrongAnswers,
+        blankAnswers,
+        totalExams: examResults.length,
+        totalTasks: tasks.length,
+        completedTasks: completedTasks.length,
+        totalActivities: questionLogs.length + examResults.length + completedTasks.length,
+        tyt_net: maxTytNet,
+        ayt_net: maxAytNet,
+        maxTytNet,
+        maxAytNet,
+        mostSolvedSubjects,
+        mostCorrectSubjects,
+        mostWrongSubjects,
+        frequentWrongTopics,
+        examDetailsWithSubjects
+      };
 
       // Gmail SMTP konfigürasyonu
       const transporter = nodemailer.createTransport({
@@ -1981,10 +2086,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // Resimleri yükle
-      const ataturkImage = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturk_1759235084194.png'));
-      const ataturkSignature = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturkimza_1759235084194.png'));
-      const turkishFlag = fs.readFileSync(path.join(process.cwd(), 'attached_assets/turkbayragi_1759235084194.png'));
+      // Resimleri yükle - UPDATED PATHS
+      const ataturkImage = fs.readFileSync(path.join(process.cwd(), 'client/public/ataturk.png'));
+      const ataturkSignature = fs.readFileSync(path.join(process.cwd(), 'client/public/ataturkimza.png'));
+      const turkishFlag = fs.readFileSync(path.join(process.cwd(), 'client/public/turkbayragi.png'));
 
       // Başarı koşullarını kontrol et
       const showAchievements = reportData.totalQuestions >= 1000 || 
@@ -2077,42 +2182,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   </div>
                 </div>
 
-                <!-- 2. Doğru ve Yanlış Sayısı -->
+                <!-- 2. Doğru, Yanlış ve Boş Analizi -->
                 ${
                   reportData.totalQuestions > 0
                     ? `
                 <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #10B981;">
-                  <h3 style="color: #1E293B; margin: 0 0 25px 0; font-size: 20px; font-weight: bold;">📊 DOĞRU VE YANLIŞ ANALİZİ</h3>
-                  <div style="display: table; width: 100%;">
-                    <div style="display: table-cell; width: 50%; padding-right: 10px;">
+                  <h3 style="color: #1E293B; margin: 0 0 25px 0; font-size: 20px; font-weight: bold;">📊 DOĞRU, YANLIŞ VE BOŞ ANALİZİ</h3>
+                  <div style="display: table; width: 100%; margin-bottom: 20px;">
+                    <div style="display: table-cell; width: 33.33%; padding-right: 7px;">
                       <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #10B981;">
                         <div style="font-size: 42px; font-weight: bold; color: #10B981; margin-bottom: 8px;">${reportData.correctAnswers || 0}</div>
-                        <div style="font-size: 15px; color: #059669; font-weight: 600;">✅ Doğru Cevap</div>
+                        <div style="font-size: 15px; color: #059669; font-weight: 600;">✅ Doğru</div>
                       </div>
                     </div>
-                    <div style="display: table-cell; width: 50%; padding-left: 10px;">
+                    <div style="display: table-cell; width: 33.33%; padding: 0 7px;">
+                      <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #EF4444;">
+                        <div style="font-size: 42px; font-weight: bold; color: #EF4444; margin-bottom: 8px;">${reportData.wrongAnswers || 0}</div>
+                        <div style="font-size: 15px; color: #DC2626; font-weight: 600;">❌ Yanlış</div>
+                      </div>
+                    </div>
+                    <div style="display: table-cell; width: 33.33%; padding-left: 7px;">
                       <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #F59E0B;">
-                        <div style="font-size: 42px; font-weight: bold; color: #F59E0B; margin-bottom: 8px;">${reportData.wrongAnswers || 0}</div>
-                        <div style="font-size: 15px; color: #D97706; font-weight: 600;">❌ Yanlış Cevap</div>
+                        <div style="font-size: 42px; font-weight: bold; color: #F59E0B; margin-bottom: 8px;">${reportData.blankAnswers || 0}</div>
+                        <div style="font-size: 15px; color: #D97706; font-weight: 600;">⭕ Boş</div>
                       </div>
                     </div>
                   </div>
                   <div style="margin-top: 25px; text-align: center; padding: 20px; background: white; border-radius: 14px; border: 2px solid #8B5CF6;">
                     <div style="font-size: 38px; font-weight: bold; color: #8B5CF6; margin-bottom: 8px;">${Math.round((reportData.correctAnswers / reportData.totalQuestions) * 100)}%</div>
                     <div style="font-size: 16px; color: #6B7280; font-weight: 600;">Başarı Oranım</div>
+                    <div style="font-size: 14px; color: #9CA3AF; margin-top: 8px;">Net: ${reportData.correctAnswers - (reportData.wrongAnswers / 4)}</div>
                   </div>
                 </div>
                     `
                     : ""
                 }
 
-                <!-- 3. Toplam Aktivite -->
-                <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 30px; border-radius: 18px; margin-bottom: 30px; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);">
-                  <h3 style="margin: 0 0 18px 0; font-size: 20px; font-weight: bold;">📈 TOPLAM AKTİVİTE</h3>
-                  <div style="font-size: 48px; font-weight: bold; margin: 18px 0;">${reportData.totalActivities || 0}</div>
-                  <p style="margin: 0; font-size: 16px; opacity: 0.95; line-height: 1.6;">
-                    ${performanceMessage}
-                  </p>
+                <!-- 3. Toplam Aktivite ve Tamamlanan Görevler -->
+                <div style="display: table; width: 100%; margin-bottom: 30px;">
+                  <div style="display: table-cell; width: 50%; padding-right: 10px;">
+                    <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 30px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4); min-height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                      <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold;">📈 TOPLAM AKTİVİTE</h3>
+                      <div style="font-size: 48px; font-weight: bold; margin: 12px 0;">${reportData.totalActivities || 0}</div>
+                      <p style="margin: 0; font-size: 14px; opacity: 0.95; line-height: 1.5;">
+                        ${performanceMessage}
+                      </p>
+                    </div>
+                  </div>
+                  <div style="display: table-cell; width: 50%; padding-left: 10px;">
+                    <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 30px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); min-height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                      <h3 style="margin: 0 0 12px 0; font-size: 18px; font-weight: bold;">✅ TAMAMLANAN GÖREVLER</h3>
+                      <div style="font-size: 48px; font-weight: bold; margin: 12px 0;">${reportData.completedTasks || 0}</div>
+                      <p style="margin: 0; font-size: 14px; opacity: 0.95;">
+                        Toplam ${reportData.totalTasks || 0} görevden ${reportData.completedTasks || 0} tanesini tamamladım!
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 ${showAchievements ? `
