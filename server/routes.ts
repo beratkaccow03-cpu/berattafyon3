@@ -2495,7 +2495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
                       <!-- Toplam Netler -->
                       <div style="display: table; width: 100%; margin-bottom: 20px;">
-                        ${exam.tyt_net ? `
+                        ${(exam.exam_type === 'TYT' || !exam.exam_type) && exam.tyt_net ? `
                         <div style="display: table-cell; width: 50%; padding-right: 10px;">
                           <div style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
                             <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">TYT Net</div>
@@ -2503,8 +2503,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           </div>
                         </div>
                         ` : ''}
-                        ${exam.ayt_net ? `
-                        <div style="display: table-cell; width: 50%; padding-left: ${exam.tyt_net ? '10px' : '0'};">
+                        ${(exam.exam_type === 'AYT' || !exam.exam_type) && exam.ayt_net ? `
+                        <div style="display: table-cell; width: 50%; padding-left: ${((exam.exam_type === 'TYT' || !exam.exam_type) && exam.tyt_net) ? '10px' : '0'};">
                           <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
                             <div style="font-size: 14px; opacity: 0.9; margin-bottom: 5px;">AYT Net</div>
                             <div style="font-size: 28px; font-weight: bold;">${exam.ayt_net}</div>
