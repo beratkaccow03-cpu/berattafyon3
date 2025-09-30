@@ -2678,36 +2678,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (emailError.code === "ENOTFOUND" || emailError.code === "ECONNECTION") {
           res.status(500).json({
             success: false,
-            message: "🌐 İnternet bağlantısı hatası!",
-            details: "Email servisi ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin.",
-            error: emailError.message
+            message: "🌐 İnternet bağlantısı hatası!"
           });
         } else if (emailError.responseCode === 550) {
           res.status(400).json({
             success: false,
-            message: "📧 Geçersiz e-posta adresi!",
-            details: "Alıcı e-posta adresi bulunamadı veya geçersiz. Lütfen e-posta adreslerini kontrol edin.",
-            error: emailError.message
+            message: "📧 Geçersiz e-posta adresi!"
           });
         } else if (emailError.responseCode === 535 || emailError.code === "EAUTH") {
           res.status(401).json({
             success: false,
-            message: "🔐 Kimlik doğrulama hatası!",
-            details: "Gmail kullanıcı adı veya şifre yanlış.",
-            instructions: [
-              "• EMAIL_USER değişkeninin doğru Gmail adresi olduğundan emin olun",
-              "• EMAIL_PASS için Gmail Uygulama Şifresi kullandığınızdan emin olun",
-              "• Normal Gmail şifreniz çalışmaz, mutlaka Uygulama Şifresi oluşturun",
-              "• 2 Adımlı Doğrulama aktif olmalıdır"
-            ].join("\n"),
-            error: emailError.message
+            message: "🔐 Kimlik doğrulama hatası!"
           });
         } else {
           res.status(500).json({
             success: false,
-            message: "❌ E-posta gönderiminde beklenmeyen hata!",
-            details: emailError.message || "Bilinmeyen bir hata oluştu.",
-            help: "Sorun devam ederse Replit Secrets bölümündeki EMAIL_USER ve EMAIL_PASS değerlerini kontrol edin."
+            message: "❌ E-posta gönderiminde beklenmeyen hata!"
           });
         }
       }

@@ -353,26 +353,10 @@ export default function Homepage() {
       setShowReportModal(false);
     },
     onError: (error: any) => {
-      // Detaylı hata mesajını göster
-      let description = error?.message || "E-posta gönderilirken hata oluştu.";
-      
-      if (error.details) {
-        description = error.details;
-      }
-      
-      if (error.instructions) {
-        description += "\n\n" + error.instructions;
-      }
-      
-      if (error.help) {
-        description += "\n\n" + error.help;
-      }
-      
       toast({
-        title: error?.message || "Hata!",
-        description: description,
+        title: error?.message || ".env Ayarları Yapılandırılmamış! 📧",
         variant: "destructive",
-        duration: 15000, // Daha uzun süre göster
+        duration: 5000,
       });
     },
   });
