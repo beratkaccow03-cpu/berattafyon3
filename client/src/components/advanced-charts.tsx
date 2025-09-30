@@ -206,7 +206,9 @@ function AdvancedChartsComponent() {
       }
     });
 
-    return Array.from(topicMap.values()).sort((a, b) => b.frequency - a.frequency);
+    return Array.from(topicMap.values())
+      .filter(topic => topic.frequency >= 3)
+      .sort((a, b) => b.frequency - a.frequency);
   }, [questionLogs, examResults]);
 
   // Net Analiz Verilerini İşleyin - Uygun olmayan sınav türleri için null göstermesi için düzeltildi
@@ -628,7 +630,7 @@ function AdvancedChartsComponent() {
                             {item.exam_type} {item.subject}
                           </span>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-4">
                           <Checkbox
                             checked={completedErrorTopics.has(errorTopicKey)}
                             onCheckedChange={(checked) => {
@@ -665,7 +667,7 @@ function AdvancedChartsComponent() {
                             }}
                             className="data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
                           />
-                          <div className="text-sm text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 px-3 py-1.5 rounded-full font-semibold shadow-md">
+                          <div className="text-sm text-orange-600 dark:text-orange-400 bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/40 dark:to-red-900/40 px-3 py-1.5 rounded-full font-semibold shadow-md ml-auto">
                             {item.frequency} Kez
                           </div>
                         </div>
