@@ -1982,9 +1982,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Resimleri yükle
-      const fs = require('fs');
-      const path = require('path');
-      
       const ataturkImage = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturk_1759231788864.jpg'));
       const ataturkSignature = fs.readFileSync(path.join(process.cwd(), 'attached_assets/ataturkimza_1759231788864.jpg'));
       const turkishFlag = fs.readFileSync(path.join(process.cwd(), 'attached_assets/turkbayragi_1759231788865.jpg'));
