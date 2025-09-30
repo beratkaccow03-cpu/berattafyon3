@@ -1993,6 +1993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tasks = await storage.getTasks();
       const questionLogs = await storage.getQuestionLogs();
       const examResults = await storage.getExamResults();
+      const studyHours = await storage.getStudyHours();
       const completedTasks = tasks.filter(task => task.completed);
       
       // Calculate statistics
@@ -2146,6 +2147,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       mostCorrectTopics.sort((a, b) => b.correctCount - a.correctCount);
       
+      // Aylık çalışma saati toplamı hesapla
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const monthlyStudySeconds = studyHours
+        .filter((sh: any) => {
+          const date = new Date(sh.study_date);
+          return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+        })
+        .reduce((total: number, sh: any) => {
+          return total + (sh.hours * 3600) + (sh.minutes * 60) + sh.seconds;
+        }, 0);
+      
+      const totalStudyHours = Math.floor(monthlyStudySeconds / 3600);
+      const totalStudyMinutes = Math.floor((monthlyStudySeconds % 3600) / 60);
+      const totalStudySeconds = monthlyStudySeconds % 60;
+      const formattedStudyTime = `${String(totalStudyHours).padStart(2, '0')}:${String(totalStudyMinutes).padStart(2, '0')}:${String(totalStudySeconds).padStart(2, '0')}`;
+      
       const reportData = {
         totalQuestions,
         correctAnswers,
@@ -2166,7 +2184,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         examDetailsWithSubjects,
         mostActiveDate,
         maxQuestionsInDay,
-        mostCorrectTopics: mostCorrectTopics.slice(0, 5)
+        mostCorrectTopics: mostCorrectTopics.slice(0, 5),
+        formattedStudyTime
       };
 
       // Gmail SMTP konfigürasyonu
@@ -2341,6 +2360,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     <div style="font-size: 46px; font-weight: bold;">${reportData.completedTasks || 0}</div>
                   </div>
                 </div>
+
+                <!-- 5. Aylık Çalışma Saati -->
+                ${reportData.formattedStudyTime !== '00:00:00' ? `
+                <div style="width: 100%; margin-bottom: 30px;">
+                  <div style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 25px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(245, 158, 11, 0.4);">
+                    <div>
+                      <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; opacity: 0.95;">⏱️ BU AY ÇALIŞMA SÜRESİ</h3>
+                      <p style="margin: 0 0 12px 0; font-size: 13px; opacity: 0.9;">
+                        Bu ay toplam ${reportData.formattedStudyTime} saat çalıştım! 💪
+                      </p>
+                    </div>
+                    <div style="font-size: 46px; font-weight: bold;">${reportData.formattedStudyTime}</div>
+                  </div>
+                </div>
+                ` : ""}
 
                 ${showAchievements ? `
                 <!-- Bu Ayın Öne Çıkan Başarıları -->
