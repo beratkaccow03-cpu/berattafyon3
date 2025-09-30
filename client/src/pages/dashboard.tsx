@@ -315,7 +315,14 @@ export default function Dashboard() {
   });
 
   const createStudyHoursMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/study-hours", data),
+    mutationFn: (data: any) => {
+      // Aynı gün için zaten kayıt var mı kontrol et
+      const existingEntry = studyHours.find((sh: any) => sh.study_date === data.study_date);
+      if (existingEntry) {
+        throw new Error("Bu tarih için zaten çalışma saati kaydı var!");
+      }
+      return apiRequest("POST", "/api/study-hours", data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/study-hours"] });
       toast({ title: "⏱️ Çalışma saati eklendi", description: "Çalışma süreniz başarıyla kaydedildi!" });
@@ -327,8 +334,20 @@ export default function Dashboard() {
         seconds: 0,
       });
     },
+    onError: (error: any) => {
+      const message = error?.message || "Çalışma saati eklenemedi.";
+      toast({ title: "❌ Hata", description: message, variant: "destructive" });
+    },
+  });
+
+  const deleteStudyHoursMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/study-hours/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/study-hours"] });
+      toast({ title: "🗑️ Çalışma saati silindi", description: "Çalışma süreniz başarıyla silindi." });
+    },
     onError: () => {
-      toast({ title: "❌ Hata", description: "Çalışma saati eklenemedi.", variant: "destructive" });
+      toast({ title: "Hata", description: "Çalışma saati silinemedi.", variant: "destructive" });
     },
   });
 
@@ -627,6 +646,61 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+
+        {/* Çalışma Saatleri Listesi */}
+        {studyHours.length > 0 && (
+          <div className="mb-8">
+            <Card className="bg-gradient-to-br from-cyan-50/50 via-card to-blue-50/50 dark:from-cyan-950/30 dark:via-card dark:to-blue-950/30 backdrop-blur-sm border-2 border-cyan-200/30 dark:border-cyan-800/30 shadow-2xl">
+              <CardHeader className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-t-lg border-b border-cyan-200/30">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-2">
+                  <Clock className="h-6 w-6 text-cyan-500" />
+                  ⏱️ Eklenen Çalışma Saatleri
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  {[...studyHours].sort((a, b) => new Date(b.study_date).getTime() - new Date(a.study_date).getTime()).map((sh: any) => (
+                    <div
+                      key={sh.id}
+                      className="flex items-center justify-between p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg border border-cyan-200/30 dark:border-cyan-700/30 hover:shadow-md transition-shadow"
+                      data-testid={`study-hour-item-${sh.id}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                          <Clock className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-foreground">
+                            {new Date(sh.study_date).toLocaleDateString('tr-TR', { 
+                              day: 'numeric', 
+                              month: 'long', 
+                              year: 'numeric',
+                              weekday: 'long'
+                            })}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Çalışma Süresi: <span className="font-bold text-cyan-600 dark:text-cyan-400">
+                              {sh.hours}s {sh.minutes}dk {sh.seconds}sn
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => deleteStudyHoursMutation.mutate(sh.id)}
+                        variant="destructive"
+                        size="sm"
+                        disabled={deleteStudyHoursMutation.isPending}
+                        data-testid={`button-delete-study-hour-${sh.id}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Özet Kartları */}
         <DashboardSummaryCards />
@@ -1234,7 +1308,7 @@ export default function Dashboard() {
           {selectedHeatmapDay && (
             <div className="space-y-6">
               {/* Özet */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl">
                   <div className="text-2xl font-bold text-green-600">{selectedHeatmapDay.dayActivities.questions.length}</div>
                   <div className="text-sm text-muted-foreground">Soru Çözümü</div>
@@ -1246,6 +1320,23 @@ export default function Dashboard() {
                 <div className="text-center p-4 bg-gradient-to-r from-purple-100 to-violet-100 dark:from-purple-900/20 dark:to-violet-900/20 rounded-xl">
                   <div className="text-2xl font-bold text-purple-600">{selectedHeatmapDay.dayActivities.exams.length}</div>
                   <div className="text-sm text-muted-foreground">Deneme Sınavı</div>
+                </div>
+                <div className="text-center p-4 bg-gradient-to-r from-cyan-100 to-teal-100 dark:from-cyan-900/20 dark:to-teal-900/20 rounded-xl">
+                  <div className="text-2xl font-bold text-cyan-600">
+                    {(() => {
+                      if (!selectedHeatmapDay.dayActivities.studyHours || selectedHeatmapDay.dayActivities.studyHours.length === 0) return "0s 0dk";
+                      const totalSeconds = selectedHeatmapDay.dayActivities.studyHours.reduce((sum: number, sh: any) => {
+                        const h = parseInt(sh.hours) || 0;
+                        const m = parseInt(sh.minutes) || 0;
+                        const s = parseInt(sh.seconds) || 0;
+                        return sum + (h * 3600 + m * 60 + s);
+                      }, 0);
+                      const hours = Math.floor(totalSeconds / 3600);
+                      const minutes = Math.floor((totalSeconds % 3600) / 60);
+                      return `${hours}s ${minutes}dk`;
+                    })()}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Çalışma Saati</div>
                 </div>
               </div>
 
@@ -2739,6 +2830,48 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+
+          {/* Eklenen Çalışma Saatleri Listesi */}
+          {studyHours.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Eklenen Çalışma Saatleri
+              </h3>
+              <div className="max-h-48 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                {[...studyHours].sort((a, b) => new Date(b.study_date).getTime() - new Date(a.study_date).getTime()).map((sh: any) => (
+                  <div
+                    key={sh.id}
+                    className="flex items-center justify-between p-3 bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-lg border border-cyan-200/50 dark:border-cyan-700/30"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                      <div>
+                        <div className="text-sm font-medium text-foreground">
+                          {new Date(sh.study_date).toLocaleDateString('tr-TR', { 
+                            day: 'numeric', 
+                            month: 'short'
+                          })}
+                        </div>
+                        <div className="text-xs text-cyan-600 dark:text-cyan-400 font-semibold">
+                          {sh.hours}s {sh.minutes}dk {sh.seconds}sn
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => deleteStudyHoursMutation.mutate(sh.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-900/20"
+                      disabled={deleteStudyHoursMutation.isPending}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 mt-6">
             <Button

@@ -2980,6 +2980,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/study-hours", async (req, res) => {
     try {
       const validatedData = insertStudyHoursSchema.parse(req.body);
+      
+      // Aynı tarih için zaten kayıt var mı kontrol et
+      const existingStudyHours = await storage.getStudyHours();
+      const duplicate = existingStudyHours.find((sh: any) => sh.study_date === validatedData.study_date);
+      
+      if (duplicate) {
+        return res.status(409).json({ message: "Bu tarih için zaten çalışma saati kaydı var!" });
+      }
+      
       const studyHours = await storage.createStudyHours(validatedData);
       res.status(201).json(studyHours);
     } catch (error) {

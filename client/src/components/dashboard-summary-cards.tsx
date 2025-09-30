@@ -2,7 +2,7 @@
 //BERATCAKIROGLU OZEL ANALİZ TAKIP SISTEMI
 //BERATCAKIROGLU OZEL ANALİZ TAKIP SISTEMI
 import { useQuery } from "@tanstack/react-query";
-import { TrendingUp, TrendingDown, Target, BookOpen, Award, Brain, Zap, Calendar, BarChart3, Sparkles } from "lucide-react";
+import { TrendingUp, TrendingDown, Target, BookOpen, Award, Brain, Zap, Calendar, BarChart3, Sparkles, Clock } from "lucide-react";
 import { ExamResult, QuestionLog } from "@shared/schema";
 import { useState, useEffect } from "react";
 
@@ -18,12 +18,16 @@ export function DashboardSummaryCards() {
     queryKey: ["/api/question-logs"],
   });
 
+  const { data: studyHours = [], isLoading: studyHoursLoading } = useQuery<any[]>({
+    queryKey: ["/api/study-hours"],
+  });
+
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
 
-  const isLoading = examLoading || questionLoading;
+  const isLoading = examLoading || questionLoading || studyHoursLoading;
   
 
   // TYT ve AYT net ortalamalarını hesapla
@@ -79,6 +83,59 @@ export function DashboardSummaryCards() {
     };
   };
 
+  // Çalışma saati istatistiklerini hesapla
+  const calculateStudyHoursStats = () => {
+    const totalSeconds = studyHours.reduce((total: number, sh: any) => {
+      const hours = parseInt(sh.hours) || 0;
+      const minutes = parseInt(sh.minutes) || 0;
+      const seconds = parseInt(sh.seconds) || 0;
+      return total + (hours * 3600 + minutes * 60 + seconds);
+    }, 0);
+    
+    const totalHours = Math.floor(totalSeconds / 3600);
+    const totalMinutes = Math.floor((totalSeconds % 3600) / 60);
+    
+    // Günlük ortalama
+    const uniqueDates = Array.from(new Set(studyHours.map((sh: any) => sh.study_date)));
+    const avgSecondsPerDay = uniqueDates.length > 0 ? totalSeconds / uniqueDates.length : 0;
+    const avgHoursPerDay = Math.floor(avgSecondsPerDay / 3600);
+    const avgMinutesPerDay = Math.floor((avgSecondsPerDay % 3600) / 60);
+    
+    // En uzun çalışma günü
+    const dayActivity: { [key: string]: number } = {};
+    studyHours.forEach((sh: any) => {
+      const date = sh.study_date;
+      const hours = parseInt(sh.hours) || 0;
+      const minutes = parseInt(sh.minutes) || 0;
+      const seconds = parseInt(sh.seconds) || 0;
+      const totalSec = hours * 3600 + minutes * 60 + seconds;
+      dayActivity[date] = (dayActivity[date] || 0) + totalSec;
+    });
+    
+    let longestStudyDay: string | null = null;
+    let maxStudySeconds = 0;
+    Object.entries(dayActivity).forEach(([date, seconds]) => {
+      if (seconds > maxStudySeconds) {
+        maxStudySeconds = seconds;
+        longestStudyDay = date;
+      }
+    });
+    
+    const longestHours = Math.floor(maxStudySeconds / 3600);
+    const longestMinutes = Math.floor((maxStudySeconds % 3600) / 60);
+    
+    return {
+      totalHours,
+      totalMinutes,
+      avgHoursPerDay,
+      avgMinutesPerDay,
+      activeDays: uniqueDates.length,
+      longestStudyDay,
+      longestHours,
+      longestMinutes
+    };
+  };
+
   // TYT ve AYT net başarı oranlarına göre en güçlü ve en zayıf konuları hesapla
   const calculateSubjectPerformance = () => {
     const subjectStats: { [key: string]: { correct: number; attempted: number } } = {};
@@ -117,12 +174,13 @@ export function DashboardSummaryCards() {
 
   const netAverages = calculateNetAverages();
   const questionStats = calculateQuestionStats();
+  const studyHoursStats = calculateStudyHoursStats();
   const subjectPerformance = calculateSubjectPerformance();
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        {[1, 2, 3].map((i) => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 mb-12">
+        {[1, 2, 3, 4].map((i) => (
           <div key={i} className="bg-gradient-to-br from-white/50 to-white/30 dark:from-gray-900/50 dark:to-gray-800/30 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-8 relative overflow-hidden animate-pulse">
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-blue-500/5 dark:from-purple-400/10 dark:to-blue-400/10"></div>
             <div className="relative space-y-4">
@@ -151,7 +209,7 @@ export function DashboardSummaryCards() {
         <p className="text-muted-foreground"></p>
       </div>
 
-      <div className={`grid grid-cols-1 lg:grid-cols-3 gap-8 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <div className={`grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         {/* Geliştirilmiş TYT/AYT Net Ortalamaları Kartı */}
         <div className="group bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-900/80 dark:to-gray-800/60 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-8 relative overflow-hidden hover:scale-[1.02] transition-all duration-500 shadow-lg hover:shadow-2xl" data-testid="card-exam-averages">
           {/* Animasyonlu Arka Plan Öğeleri */}
@@ -324,6 +382,89 @@ export function DashboardSummaryCards() {
                         style={{ width: `${questionStats.totalQuestions > 0 ? (questionStats.totalWrong / questionStats.totalQuestions) * 100 : 0}%` }}
                       ></div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Çalışma Saatleri İstatistikleri Kartı */}
+        <div className="group bg-gradient-to-br from-white/80 to-white/60 dark:from-gray-900/80 dark:to-gray-800/60 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/30 p-8 relative overflow-hidden hover:scale-[1.02] transition-all duration-500 shadow-lg hover:shadow-2xl" data-testid="card-study-hours">
+          {/* Animasyonlu Arka Plan Öğeleri */}
+          <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700"></div>
+          <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-gradient-to-tr from-teal-500/15 to-cyan-600/15 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+          
+          {/* Saat Simgesi Animasyonu */}
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <Clock className="h-5 w-5 text-cyan-500 animate-spin" style={{ animationDuration: '3s' }} />
+          </div>
+
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
+                <Clock className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground">Çalışma Saatleri</h3>
+                <p className="text-sm text-muted-foreground">
+                  {studyHoursStats.longestStudyDay ? (
+                    <span className="flex items-center gap-1">
+                      En uzun gün → 
+                      <span className="font-semibold text-cyan-600 dark:text-cyan-400">
+                        {new Date(studyHoursStats.longestStudyDay).toLocaleDateString('tr-TR', { 
+                          day: 'numeric', 
+                          month: 'short'
+                        })} ({studyHoursStats.longestHours}s {studyHoursStats.longestMinutes}dk)
+                      </span>
+                    </span>
+                  ) : (
+                    'Henüz çalışma kaydı bulunmuyor'
+                  )}
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-cyan-200/30 dark:border-cyan-700/30">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <div className="text-3xl font-black text-cyan-600 dark:text-cyan-400" data-testid="text-total-study-hours">
+                      {studyHoursStats.totalHours}s {studyHoursStats.totalMinutes}dk
+                    </div>
+                    <div className="text-sm font-medium text-cyan-700 dark:text-cyan-300">Toplam Çalışma Süresi</div>
+                  </div>
+                  <div className="p-3 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl">
+                    <Clock className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm border border-blue-200/30 dark:border-blue-700/30">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <div className="text-2xl font-black text-blue-600 dark:text-blue-400" data-testid="text-avg-daily-study">
+                      {studyHoursStats.avgHoursPerDay}s {studyHoursStats.avgMinutesPerDay}dk
+                    </div>
+                    <div className="text-sm font-medium text-blue-700 dark:text-blue-300">Günlük Ortalama</div>
+                  </div>
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                    <Calendar className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4 backdrop-blur-sm border border-teal-200/30 dark:border-teal-700/30">
+                <div className="text-center">
+                  <div className="text-2xl font-black text-teal-600 dark:text-teal-400 mb-2" data-testid="text-active-study-days">
+                    {studyHoursStats.activeDays}
+                  </div>
+                  <div className="text-sm font-medium text-teal-700 dark:text-teal-300">Aktif Çalışma Günü</div>
+                  <div className="w-full bg-teal-100 dark:bg-teal-900/30 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-gradient-to-r from-teal-500 to-cyan-600 h-2 rounded-full transition-all duration-1000"
+                      style={{ width: `${Math.min((studyHoursStats.activeDays / 30) * 100, 100)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>

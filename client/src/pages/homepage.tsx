@@ -496,7 +496,8 @@ export default function Homepage() {
       questionLogs: dayQuestionLogs,
       examResults: dayExamResults,
       studyHours: dayStudyHours,
-      total: completedTasks.length + dayQuestionLogs.length + dayExamResults.length + dayStudyHours.length
+      total: completedTasks.length + dayQuestionLogs.length + dayExamResults.length,
+      performanceTotal: completedTasks.length + dayQuestionLogs.length + dayExamResults.length
     };
   }, [allTasks, questionLogs, examResults, studyHours]);
 
@@ -517,7 +518,8 @@ export default function Homepage() {
       questionLogs: [] as QuestionLog[],
       examResults: [] as ExamResult[],
       studyHours: [] as any[],
-      total: 0
+      total: 0,
+      performanceTotal: 0
     };
 
     // Ayın başından seçilen tarihe kadar her günü döngü ile geç
@@ -531,7 +533,8 @@ export default function Homepage() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    activities.total = activities.tasks.length + activities.questionLogs.length + activities.examResults.length + activities.studyHours.length;
+    activities.total = activities.tasks.length + activities.questionLogs.length + activities.examResults.length;
+    activities.performanceTotal = activities.tasks.length + activities.questionLogs.length + activities.examResults.length;
     return activities;
   }, [getActivitiesForDate]);
 
@@ -834,18 +837,43 @@ export default function Homepage() {
                             <div className="bg-gradient-to-r from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
                               <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium text-foreground">Günlük Performans</span>
-                                <span className="text-lg font-bold text-primary">{activities.total}</span>
+                                <span className="text-lg font-bold text-primary">{activities.performanceTotal}</span>
                               </div>
                               <div className="w-full bg-muted rounded-full h-2">
                                 <div 
                                   className="bg-gradient-to-r from-primary to-primary/80 h-2 rounded-full transition-all duration-500" 
-                                  style={{ width: `${Math.min((activities.total / 10) * 100, 100)}%` }}
+                                  style={{ width: `${Math.min((activities.performanceTotal / 10) * 100, 100)}%` }}
                                 ></div>
                               </div>
                               <div className="text-xs text-muted-foreground mt-1">
-                                {activities.total >= 10 ? "Müthiş bir gün! 🎉" : activities.total >= 5 ? "İyi gidiyor! 👍" : "Daha fazla çalışabiliriz! 💪"}
+                                {activities.performanceTotal >= 10 ? "Müthiş bir gün! 🎉" : activities.performanceTotal >= 5 ? "İyi gidiyor! 👍" : "Daha fazla çalışabiliriz! 💪"}
                               </div>
                             </div>
+                            
+                            {/* Bugünün Çalışma Saatleri */}
+                            {activities.studyHours.length > 0 && (
+                              <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-lg p-4 border border-cyan-300/30 dark:border-cyan-700/30">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                                    <span className="text-sm font-medium text-foreground">Bugün Çalışılan Saat</span>
+                                  </div>
+                                  <span className="text-lg font-bold text-cyan-600 dark:text-cyan-400">
+                                    {(() => {
+                                      const totalSeconds = activities.studyHours.reduce((sum: number, sh: any) => {
+                                        const h = parseInt(sh.hours) || 0;
+                                        const m = parseInt(sh.minutes) || 0;
+                                        const s = parseInt(sh.seconds) || 0;
+                                        return sum + (h * 3600 + m * 60 + s);
+                                      }, 0);
+                                      const hours = Math.floor(totalSeconds / 3600);
+                                      const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                      return `${hours}s ${minutes}dk`;
+                                    })()}
+                                  </span>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Detaylı Aktivite Listesi */}
                             <div className="space-y-2">
