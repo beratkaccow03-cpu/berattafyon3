@@ -2658,22 +2658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!emailUser || !emailPass) {
         return res.status(400).json({
           success: false,
-          message: ".env Ayarları Yapılandırılmamış! 📧",
-          details: "Rapor göndermek için e-posta ayarlarınızı yapmanız gerekiyor.",
-          instructions: [
-            "1. Replit Secrets bölümüne gidin",
-            "2. Aşağıdaki değişkenleri ekleyin:",
-            "   • EMAIL_USER: Gmail adresiniz (örn: ornek@gmail.com)",
-            "   • EMAIL_PASS: Gmail uygulama şifreniz",
-            "",
-            "⚠️ Önemli: Gmail için normal şifre değil, 'Uygulama Şifresi' kullanmalısınız!",
-            "",
-            "Gmail Uygulama Şifresi Alma Adımları:",
-            "1. Google Hesabım > Güvenlik bölümüne gidin",
-            "2. '2 Adımlı Doğrulama'yı aktif edin (zorunlu)",
-            "3. 'Uygulama şifreleri' kısmından yeni şifre oluşturun",
-            "4. Oluşan 16 haneli şifreyi EMAIL_PASS olarak kaydedin"
-          ].join("\n")
+          message: ".env Ayarları Yapılandırılmamış! 📧"
         });
       }
 
