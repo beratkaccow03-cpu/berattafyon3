@@ -78,6 +78,7 @@ export const examSubjectNets = pgTable("exam_subject_nets", {
   correct_count: text("correct_count").notNull().default("0"),
   wrong_count: text("wrong_count").notNull().default("0"),
   blank_count: text("blank_count").notNull().default("0"),
+  wrong_topics_json: text("wrong_topics_json"), // Yapılandırılmış yanlış konu verileri için JSON dizesi
   createdAt: timestamp("created_at").defaultNow(),
 });
 
