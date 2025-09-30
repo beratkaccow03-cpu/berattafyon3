@@ -105,6 +105,10 @@ All API endpoints are defined in `server/routes.ts`:
   - Added wrong topics tracking from exam results (wrong_topics_json parsing)
   - Exam details now show wrong topics for each subject with detailed breakdown
   - Enhanced statistics calculation with date-based tracking
+- ✅ **UI/UX IMPROVEMENTS IN ADVANCED CHARTS** (Latest):
+  - **Filtered frequent wrong topics**: Added `.filter(topic => topic.frequency >= 3)` to missingTopics calculation in advanced-charts.tsx to show only topics with 3+ errors across all sources (exams + questions), improving focus on truly problematic topics
+  - **Improved frequency badge spacing**: Enhanced error analysis section layout by increasing gap from `gap-3` to `gap-4` and adding `ml-auto` to frequency badges ("{frequency} Kez"), providing better visual separation between checkboxes and badges
+  - **Verified statistics cards**: Confirmed report modal statistics cards (Tamamlanan Görev, Çözülen Soru, Yapılan Deneme, Toplam Aktivite) are properly centered with text-center classes
 - ℹ️ Minor TypeScript warnings present in drizzle-zod schemas (runtime unaffected)
 
 ## Notes
