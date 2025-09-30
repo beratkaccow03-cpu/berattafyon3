@@ -2467,46 +2467,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ],
       };
 
-      // E-postayı gönder
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        try {
-          const info = await transporter.sendMail(mailOptions);
-          console.log("Email sent successfully:", info.messageId);
-          res.json({
-            message: "Rapor başarıyla e-posta adreslerine gönderildi!",
-          });
-        } catch (emailError) {
-          console.error("Email sending failed:", emailError);
-
-          // Email hatasının türüne göre farklı mesajlar
-          if (
-            emailError.code === "ENOTFOUND" ||
-            emailError.code === "ECONNECTION"
-          ) {
-            res.status(500).json({
-              message:
-                "Email servisi ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin.",
-            });
-          } else if (emailError.responseCode === 550) {
-            res.status(400).json({
-              message:
-                "Email adresi bulunamadı veya geçersiz.",
-            });
-          } else if (emailError.responseCode === 535) {
-            res.status(500).json({
-              message:
-                "Email kimlik doğrulama hatası. Sistem yöneticisine başvurun.",
-            });
-          } else {
-            res.status(500).json({
-              message: `Email gönderiminde hata: ${emailError.message}`,
-            });
-          }
-        }
-      } else {
-        res.status(500).json({
-          message: "E-posta ayarları yapılandırılmamış. Lütfen sistem yöneticisine başvurun.",
+      // E-posta yapılandırması kontrolü
+      const emailUser = process.env.EMAIL_USER || process.env.GMAIL_USER;
+      const emailPass = process.env.EMAIL_PASS || process.env.GMAIL_PASS;
+      
+      if (!emailUser || !emailPass) {
+        return res.status(400).json({
+          success: false,
+          message: "E-posta ayarları yapılandırılmamış! 📧",
+          details: "Rapor göndermek için e-posta ayarlarınızı yapmanız gerekiyor.",
+          instructions: [
+            "1. Replit Secrets bölümüne gidin",
+            "2. Aşağıdaki değişkenleri ekleyin:",
+            "   • EMAIL_USER: Gmail adresiniz (örn: ornek@gmail.com)",
+            "   • EMAIL_PASS: Gmail uygulama şifreniz",
+            "",
+            "⚠️ Önemli: Gmail için normal şifre değil, 'Uygulama Şifresi' kullanmalısınız!",
+            "",
+            "Gmail Uygulama Şifresi Alma Adımları:",
+            "1. Google Hesabım > Güvenlik bölümüne gidin",
+            "2. '2 Adımlı Doğrulama'yı aktif edin (zorunlu)",
+            "3. 'Uygulama şifreleri' kısmından yeni şifre oluşturun",
+            "4. Oluşan 16 haneli şifreyi EMAIL_PASS olarak kaydedin"
+          ].join("\n")
         });
+      }
+
+      // E-postayı gönder
+      try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("Email sent successfully:", info.messageId);
+        res.json({
+          success: true,
+          message: "✅ Rapor başarıyla e-posta adreslerine gönderildi!",
+          details: `Rapor ${new Date().toLocaleString("tr-TR")} tarihinde gönderildi.`
+        });
+      } catch (emailError: any) {
+        console.error("Email sending failed:", emailError);
+
+        // Email hatasının türüne göre farklı mesajlar
+        if (emailError.code === "ENOTFOUND" || emailError.code === "ECONNECTION") {
+          res.status(500).json({
+            success: false,
+            message: "🌐 İnternet bağlantısı hatası!",
+            details: "Email servisi ile bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edin.",
+            error: emailError.message
+          });
+        } else if (emailError.responseCode === 550) {
+          res.status(400).json({
+            success: false,
+            message: "📧 Geçersiz e-posta adresi!",
+            details: "Alıcı e-posta adresi bulunamadı veya geçersiz. Lütfen e-posta adreslerini kontrol edin.",
+            error: emailError.message
+          });
+        } else if (emailError.responseCode === 535 || emailError.code === "EAUTH") {
+          res.status(401).json({
+            success: false,
+            message: "🔐 Kimlik doğrulama hatası!",
+            details: "Gmail kullanıcı adı veya şifre yanlış.",
+            instructions: [
+              "• EMAIL_USER değişkeninin doğru Gmail adresi olduğundan emin olun",
+              "• EMAIL_PASS için Gmail Uygulama Şifresi kullandığınızdan emin olun",
+              "• Normal Gmail şifreniz çalışmaz, mutlaka Uygulama Şifresi oluşturun",
+              "• 2 Adımlı Doğrulama aktif olmalıdır"
+            ].join("\n"),
+            error: emailError.message
+          });
+        } else {
+          res.status(500).json({
+            success: false,
+            message: "❌ E-posta gönderiminde beklenmeyen hata!",
+            details: emailError.message || "Bilinmeyen bir hata oluştu.",
+            help: "Sorun devam ederse Replit Secrets bölümündeki EMAIL_USER ve EMAIL_PASS değerlerini kontrol edin."
+          });
+        }
       }
     } catch (error) {
       console.error("Email error:", error);

@@ -331,27 +331,48 @@ export default function Homepage() {
         },
       });
       
+      const result = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "E-posta gönderilemedi");
+        // Detaylı hata bilgisini exception olarak fırlat
+        const error: any = new Error(result.message || "E-posta gönderilemedi");
+        error.details = result.details;
+        error.instructions = result.instructions;
+        error.help = result.help;
+        throw error;
       }
       
-      return response.json();
+      return result;
     },
     onSuccess: (response) => {
       toast({
-        title: "Raporum Eposta Adresime Gönderildi !",
-        description: "",
-        duration: 1500,
+        title: response.message || "✅ Rapor Gönderildi!",
+        description: response.details || "E-posta başarıyla gönderildi.",
+        duration: 3000,
       });
       setShowReportModal(false);
     },
     onError: (error: any) => {
+      // Detaylı hata mesajını göster
+      let description = error?.message || "E-posta gönderilirken hata oluştu.";
+      
+      if (error.details) {
+        description = error.details;
+      }
+      
+      if (error.instructions) {
+        description += "\n\n" + error.instructions;
+      }
+      
+      if (error.help) {
+        description += "\n\n" + error.help;
+      }
+      
       toast({
-        title: "Hata!",
-        description: error?.message || "E-posta gönderilirken hata oluştu.",
+        title: error?.message || "Hata!",
+        description: description,
         variant: "destructive",
-        duration: 5000,
+        duration: 15000, // Daha uzun süre göster
       });
     },
   });
