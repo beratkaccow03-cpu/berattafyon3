@@ -2382,7 +2382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 <!-- En Çok Soru Çözülen Tarih -->
                 ${reportData.mostActiveDate ? `
                 <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); padding: 30px; border-radius: 18px; margin-bottom: 30px; border-left: 6px solid #F59E0B;">
-                  <h3 style="color: #92400E; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">📆 EN ÇOK SORU ÇÖZÜLEN TARİH</h3>
+                  <h3 style="color: #92400E; margin: 0 0 20px 0; font-size: 20px; font-weight: bold;">🗓️ EN ÇOK SORU ÇÖZÜLEN TARİH</h3>
                   <div style="background: white; padding: 25px; border-radius: 14px; text-align: center; border: 3px solid #F59E0B;">
                     <div style="font-size: 18px; color: #6B7280; margin-bottom: 12px; font-weight: 600;">
                       ${new Date(reportData.mostActiveDate).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
