@@ -2265,17 +2265,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 <!-- 1. Çözülen Soru ve Deneme -->
                 <div style="display: table; width: 100%; margin-bottom: 30px;">
                   <div style="display: table-cell; width: 50%; padding-right: 10px;">
-                    <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 35px 25px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;">
-                      <div style="font-size: 14px; opacity: 0.95; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 15px;">📚 ÇÖZÜLEN SORU</div>
-                      <div style="flex: 1;"></div>
-                      <div style="font-size: 52px; font-weight: bold;">${reportData.totalQuestions || 0}</div>
+                    <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 20px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);">
+                      <div style="font-size: 13px; opacity: 0.95; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px;">📚 ÇÖZÜLEN SORU</div>
+                      <div style="font-size: 42px; font-weight: bold;">${reportData.totalQuestions || 0}</div>
                     </div>
                   </div>
                   <div style="display: table-cell; width: 50%; padding-left: 10px;">
-                    <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 35px 25px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4); min-height: 160px; display: flex; flex-direction: column; justify-content: space-between;">
-                      <div style="font-size: 14px; opacity: 0.95; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 15px;">🎯 ÇÖZÜLEN DENEME</div>
-                      <div style="flex: 1;"></div>
-                      <div style="font-size: 52px; font-weight: bold;">${reportData.totalExams || 0}</div>
+                    <div style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); color: white; padding: 20px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.4);">
+                      <div style="font-size: 13px; opacity: 0.95; font-weight: 600; letter-spacing: 0.5px; margin-bottom: 8px;">🎯 ÇÖZÜLEN DENEME</div>
+                      <div style="font-size: 42px; font-weight: bold;">${reportData.totalExams || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -2318,27 +2316,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
                 <!-- 3. Toplam Aktivite (Tek Sütun) -->
                 <div style="width: 100%; margin-bottom: 25px;">
-                  <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 35px 30px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4); min-height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+                  <div style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 25px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);">
                     <div>
-                      <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold; opacity: 0.95;">📈 TOPLAM AKTİVİTE</h3>
-                      <p style="margin: 0 0 20px 0; font-size: 14px; opacity: 0.9; line-height: 1.5;">
+                      <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; opacity: 0.95;">📈 TOPLAM AKTİVİTE</h3>
+                      <p style="margin: 0 0 12px 0; font-size: 13px; opacity: 0.9; line-height: 1.4;">
                         ${performanceMessage}
                       </p>
                     </div>
-                    <div style="font-size: 56px; font-weight: bold;">${reportData.totalActivities || 0}</div>
+                    <div style="font-size: 46px; font-weight: bold;">${reportData.totalActivities || 0}</div>
                   </div>
                 </div>
                 
                 <!-- 4. Tamamlanan Görevler (Tek Sütun) -->
                 <div style="width: 100%; margin-bottom: 30px;">
-                  <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 35px 30px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4); min-height: 200px; display: flex; flex-direction: column; justify-content: space-between;">
+                  <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 25px; border-radius: 18px; text-align: center; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);">
                     <div>
-                      <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold; opacity: 0.95;">✅ TAMAMLANAN GÖREVLER</h3>
-                      <p style="margin: 0 0 20px 0; font-size: 14px; opacity: 0.9;">
+                      <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: bold; opacity: 0.95;">✅ TAMAMLANAN GÖREVLER</h3>
+                      <p style="margin: 0 0 12px 0; font-size: 13px; opacity: 0.9;">
                         Toplam ${reportData.totalTasks || 0} görevden ${reportData.completedTasks || 0} tanesini tamamladım!
                       </p>
                     </div>
-                    <div style="font-size: 56px; font-weight: bold;">${reportData.completedTasks || 0}</div>
+                    <div style="font-size: 46px; font-weight: bold;">${reportData.completedTasks || 0}</div>
                   </div>
                 </div>
 
